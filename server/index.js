@@ -38,7 +38,8 @@ const server = createServer(app);
 
 // WebSocket
 const wss = new WebSocketServer({ server, path: '/ws' });
-const mm = createMatchmaker({ verifyInitData });
+// Matchmaking works for both authenticated and anonymous users.
+const mm = createMatchmaker();
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
