@@ -76,9 +76,6 @@
               <option value="black">Чёрные</option>
             </select>
           </label>
-          <label class="switch">Таймер (сек/ход)
-            <input id="turnSeconds" type="number" class="input" min="0" step="5" value="0" />
-          </label>
         </div>
         <div class="col">
           <h3>Звук</h3>
@@ -171,7 +168,6 @@ const UI = {
   level:document.getElementById('level'),
   mode:document.getElementById('mode'),
   yourColor:document.getElementById('yourColor'),
-  turnSeconds:document.getElementById('turnSeconds'),
   musicOn:document.getElementById('musicOn'), sfxOn:document.getElementById('sfxOn'),
   tMusic:document.getElementById('toggleMusic'), tSfx:document.getElementById('toggleSfx'),
   undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
@@ -179,7 +175,7 @@ const UI = {
 };
 
 const State = {
-  board:null, turn:LIGHT, history:[], mustCapture:true, mode:"ai", humanColor:LIGHT, aiDepth:1, timer:0,
+  board:null, turn:LIGHT, history:[], mustCapture:true, mode:"ai", humanColor:LIGHT, aiDepth:1,
   lock:false, dragging:null, hover:null, selectable:[], movesCache:null, gameOver:false
 };
 
@@ -470,7 +466,6 @@ function newGameFromMenu(){
   State.mode = UI.mode.value;
   State.humanColor = UI.yourColor.value==="white"? LIGHT: DARK;
   State.aiDepth = parseInt(UI.level.value,10);
-  State.timer = Math.max(0, parseInt(UI.turnSeconds.value||"0",10));
   State.selectable=[]; State.movesCache=null; State.dragging=null; State.hover=null;
   UI.tMusic.checked = UI.musicOn.checked; UI.tSfx.checked = UI.sfxOn.checked;
   if(State.mode==="ai" && State.humanColor!==State.turn){ setTimeout(thinkAI, 200); }
