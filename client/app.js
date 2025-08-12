@@ -53,12 +53,29 @@ ui.hints.checked = state.hints;
 
 // ==== Аудио ====
 const AudioKit=(()=>{let C=null,gM=null,gMu=null,mu=null,playing=false;
-function ensure(){ if(!C){ const A=window.AudioContext||window.webkitAudioContext; if(!A) return null; C=new A(); gM=C.createGain(); gM.gain.value=.9; gM.connect(C.destination); gMu=C.createGain(); gMu.gain.value=.12; gMu.connect(C.destination);} return C; }
-async function resume(){ const c=ensure(); if(c&&c.state==='suspended') await c.resume(); }
+function ensure(){
+  if(!C){
+    const A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
+    C=new A();
+    gM=C.createGain(); gM.gain.value=.9; gM.connect(C.destination);
+    gMu=C.createGain(); gMu.gain.value=.12; gMu.connect(C.destination);
+  }
+  return C;
+}
+function resume(){ const c=ensure(); if(c&&c.state==='suspended') return c.resume(); return Promise.resolve(); }
 function beep(f=480,d=.07){ const c=ensure(); if(!c) return; resume(); const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(gM); g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.start(); o.stop(c.currentTime+d); }
-async function startMusic(){ if(playing) return; const c=ensure(); if(!c) return; await resume(); mu=C.createGain(); mu.gain.value=.0001; mu.connect(gMu); const root=196, tones=[root, root*5/4, root*3/2, root*15/8]; tones.forEach((f,i)=>{ const o=C.createOscillator(); o.type='sine'; o.frequency.value=f; const g=C.createGain(); g.gain.value=.0002; o.connect(g); g.connect(mu); o.start(); const l=C.createOscillator(), lg=C.createGain(); l.type='sine'; l.frequency.value=.04+i*.02; lg.gain.value=18; l.connect(lg); lg.connect(o.frequency); l.start(); }); mu.gain.exponentialRampToValueAtTime(.35,C.currentTime+1.4); playing=true; }
-function toggle(on){ if(on){ startMusic(); } else if(playing&&mu){ const c=ensure(); mu.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.5); setTimeout(()=>{try{mu.disconnect();}catch{} mu=null; playing=false;},650); }}
-document.addEventListener('pointerdown', ()=>{ if(ui.music.checked) startMusic(); }, {once:true});
+function startMusic(){ if(playing) return; const c=ensure(); if(!c) return; resume().then(()=>{
+  mu=C.createGain(); mu.gain.value=.0001; mu.connect(gMu);
+  const root=196, tones=[root, root*5/4, root*3/2, root*15/8];
+  tones.forEach((f,i)=>{
+    const o=C.createOscillator(); o.type='sine'; o.frequency.value=f; const g=C.createGain(); g.gain.value=.0002; o.connect(g); g.connect(mu); o.start();
+    const l=C.createOscillator(), lg=C.createGain(); l.type='sine'; l.frequency.value=.04+i*.02; lg.gain.value=18; l.connect(lg); lg.connect(o.frequency); l.start();
+  });
+  mu.gain.exponentialRampToValueAtTime(.35,C.currentTime+1.4);
+  playing=true;
+}); }
+function toggle(on){ const c=ensure(); if(!c) return; resume(); if(on){ startMusic(); } else if(playing&&mu){ mu.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.5); setTimeout(()=>{try{mu.disconnect();}catch{} mu=null; playing=false;},650); }}
+document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); if(ui.music.checked) startMusic(); }, {once:true});
 return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)}, music:toggle };
 })();
 
@@ -76,7 +93,7 @@ function refreshColors(){const cs=getComputedStyle(root); COLORS.dark=cs.getProp
 refreshColors();
 root.addEventListener('transitionend',refreshColors);
 function drawPiece(x,y,p,ghost=false){const S=cv.width/8,rad=S*0.42;const grad=ctx.createRadialGradient(x-rad*0.3,y-rad*0.3,rad*0.2,x,y,rad);if(p===W||p===WK){grad.addColorStop(0,'#fff');grad.addColorStop(1,'#d6c4a5');}else{grad.addColorStop(0,'#475569');grad.addColorStop(1,'#1e293b');}ctx.save();if(ghost)ctx.globalAlpha=.8;ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=rad*0.3;ctx.fillStyle=grad;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;if(p===WK||p===BK){ctx.font=`${S*.36}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👑',x,y+1);}ctx.restore();}
-function draw(){const Wc=cv.width,S=Wc/8;ctx.clearRect(0,0,Wc,Wc);for(let r=0;r<8;r++)for(let c=0;c<8;c++){const dark=(r+c)%2===1;const grad=ctx.createLinearGradient(c*S,r*S,(c+1)*S,(r+1)*S);if(dark){grad.addColorStop(0,COLORS.dark);grad.addColorStop(1,'#1f2738');}else{grad.addColorStop(0,COLORS.light);grad.addColorStop(1,'#d2c1a3');}ctx.fillStyle=grad;ctx.fillRect(c*S,r*S,S,S);}if((state.hints||state.hintOnce)&&state.legal.length){for(const m of state.legal){const[tr,tc]=m.to;ctx.save();ctx.translate((tc+.5)*S,(tr+.5)*S);ctx.fillStyle=(m.caps.length?COLORS.cap:COLORS.acc)+'aa';ctx.beginPath();ctx.arc(0,0,S*0.18,0,Math.PI*2);ctx.fill();ctx.restore();}}if(state.selected){const[sr,sc]=state.selected;ctx.lineWidth=S*0.08;ctx.strokeStyle=COLORS.acc;ctx.strokeRect(sc*S+S*0.08,sr*S+S*0.08,S*0.84,S*0.84);}for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(state.anim && r===state.anim.path[0][0] && c===state.anim.path[0][1]) continue;const p=state.board[r][c];if(p===E)continue;drawPiece((c+.5)*S,(r+.5)*S,p);}if(state.anim){drawPiece(state.anim.x,state.anim.y,state.anim.piece);}if(state.drag){drawPiece(state.drag.x,state.drag.y,state.drag.piece,true);}state.hintOnce=false;}
+function draw(){const Wc=cv.width,S=Wc/8;ctx.clearRect(0,0,Wc,Wc);for(let r=0;r<8;r++)for(let c=0;c<8;c++){const dark=(r+c)%2===1;const grad=ctx.createLinearGradient(c*S,r*S,(c+1)*S,(r+1)*S);if(dark){grad.addColorStop(0,COLORS.dark);grad.addColorStop(1,'#1f2738');}else{grad.addColorStop(0,COLORS.light);grad.addColorStop(1,'#d2c1a3');}ctx.fillStyle=grad;ctx.fillRect(c*S,r*S,S,S);}if((state.hints||state.hintOnce)&&state.legal.length){for(const m of state.legal){const[tr,tc]=m.to;ctx.save();ctx.translate((tc+.5)*S,(tr+.5)*S);ctx.fillStyle=(m.caps.length?COLORS.cap:COLORS.acc)+'aa';ctx.beginPath();ctx.arc(0,0,S*0.18,0,Math.PI*2);ctx.fill();ctx.restore();}}if(state.selected){const[sr,sc]=state.selected;ctx.lineWidth=S*0.08;ctx.strokeStyle=COLORS.acc;ctx.strokeRect(sc*S+S*0.08,sr*S+S*0.08,S*0.84,S*0.84);}for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(state.anim && ((r===state.anim.from[0]&&c===state.anim.from[1])||(r===state.anim.to[0]&&c===state.anim.to[1]))) continue;const p=state.board[r][c];if(p===E)continue;drawPiece((c+.5)*S,(r+.5)*S,p);}if(state.anim){drawPiece(state.anim.x,state.anim.y,state.anim.piece);}if(state.drag){drawPiece(state.drag.x,state.drag.y,state.drag.piece,true);}state.hintOnce=false;}
 
 // ==== Utility ====
 function mvStr(m){if(!m)return'';const[fr,fc]=m.from,[tr,tc]=m.to;const cap=m.caps.length?'x':'-';return `${String.fromCharCode(97+fc)}${8-fr}${cap}${String.fromCharCode(97+tc)}${8-tr}`;}
@@ -88,7 +105,7 @@ function showBestMoveHint(){ const side = state.mode==='ai' ? W : state.turn; co
 
 // ==== Анимация ====
 function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-function animateMove(path,onDone){const S=cv.width/8;const piece=state.board[path[0][0]][path[0][1]];state.anim={path,piece,idx:0,start:performance.now(),dur:0,x:0,y:0};function segDur(i){const a=path[i],b=path[i+1];const dist=Math.hypot((b[1]-a[1]),(b[0]-a[0]))*S;return Math.min(220,dist/(S/150));}state.anim.dur=segDur(0);function step(now){const a=state.anim.path[state.anim.idx],b=state.anim.path[state.anim.idx+1];const t=Math.min(1,(now-state.anim.start)/state.anim.dur);const e=easeInOutCubic(t);state.anim.x=(a[1]+.5+(b[1]-a[1])*e)*S;state.anim.y=(a[0]+.5+(b[0]-a[0])*e)*S;draw();if(t<1){requestAnimationFrame(step);}else{state.anim.idx++;if(state.anim.idx>=state.anim.path.length-1){state.anim=null;onDone();}else{state.anim.start=now;state.anim.dur=segDur(state.anim.idx);requestAnimationFrame(step);}}}requestAnimationFrame(step);}
+function animateMove(path,piece,onDone){const S=cv.width/8;state.anim={path,piece,idx:0,start:performance.now(),dur:0,x:0,y:0,from:path[0],to:path[path.length-1]};function segDur(i){const a=path[i],b=path[i+1];const dist=Math.hypot((b[1]-a[1]),(b[0]-a[0]))*S;return Math.min(220,dist/(S/150));}state.anim.dur=segDur(0);function step(now){const a=state.anim.path[state.anim.idx],b=state.anim.path[state.anim.idx+1];const t=Math.min(1,(now-state.anim.start)/state.anim.dur);const e=easeInOutCubic(t);state.anim.x=(a[1]+.5+(b[1]-a[1])*e)*S;state.anim.y=(a[0]+.5+(b[0]-a[0])*e)*S;draw();if(t<1){requestAnimationFrame(step);}else{state.anim.idx++;if(state.anim.idx>=state.anim.path.length-1){state.anim=null;onDone();}else{state.anim.start=now;state.anim.dur=segDur(state.anim.idx);requestAnimationFrame(step);}}}draw();requestAnimationFrame(step);}
 
 // ==== Управление ====
 function pointerPos(evt){const rect=cv.getBoundingClientRect();return{ x:(evt.clientX-rect.left)*(cv.width/rect.width), y:(evt.clientY-rect.top)*(cv.height/rect.height) };
@@ -102,7 +119,25 @@ cv.addEventListener('pointerdown',onPointerDown);
 function onCellClick(r,c){if(state.selected){const m=state.legal.find(m=>m.to[0]===r&&m.to[1]===c);if(m){performMove(m);return;}}const p=state.board[r][c];const side=state.turn===W;if((side&&(p===W||p===WK))||(!side&&(p===B||p===BK))){state.selected=[r,c];state.legal=genMoves(state.board,state.turn).filter(m=>m.from[0]===r&&m.from[1]===c);if(state.sfx)AudioKit.sfx.sel();}else{state.selected=null;state.legal=[];}draw();}
 
 // ==== Ходы ====
-function performMove(mv){ if(state.mode==='online'){ state.selected=null; state.legal=[]; send({type:'move',move:mv}); return; } state.history.push({board:clone(state.board),turn:state.turn}); state.record=state.record.slice(0,state.curPly+1); state.record.push(mv); state.curPly++; const snd = mv.caps.length? AudioKit.sfx.cap:AudioKit.sfx.move; animateMove(mv.path, ()=>{ state.board=applyMove(state.board,mv); state.turn=(state.turn===W?B:W); state.selected=null; state.legal=[]; if(state.sfx)snd(); updateUI(); if(state.mode==='ai' && state.turn===B){ setTimeout(()=>{ const mvb=bestMoveFor(B); if(mvb) performMove(mvb); }, 50); } }); }
+function performMove(mv){
+  if(state.mode==='online'){ state.selected=null; state.legal=[]; send({type:'move',move:mv}); return; }
+  state.history.push({board:clone(state.board),turn:state.turn});
+  state.record=state.record.slice(0,state.curPly+1);
+  state.record.push(mv);
+  state.curPly++;
+  const snd = mv.caps.length? AudioKit.sfx.cap:AudioKit.sfx.move;
+  const piece = state.board[mv.from[0]][mv.from[1]];
+  state.board=applyMove(state.board,mv);
+  state.turn=(state.turn===W?B:W);
+  state.selected=null; state.legal=[];
+  animateMove(mv.path,piece,()=>{
+    if(state.sfx)snd();
+    updateUI();
+    if(state.mode==='ai' && state.turn===B){
+      setTimeout(()=>{ const mvb=bestMoveFor(B); if(mvb) performMove(mvb); }, 50);
+    }
+  });
+}
 function undoMove(){ if(state.mode==='online')return; const last=state.history.pop(); if(!last) return; state.board=last.board; state.turn=last.turn; if(state.record.length){state.record.pop(); state.curPly=Math.max(-1,state.curPly-1);} state.selected=null; state.legal=[]; updateUI();}
 
 // ==== ИИ ====

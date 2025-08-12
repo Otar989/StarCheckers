@@ -33,16 +33,26 @@ function $(s){return document.querySelector(s);}
 
 // ==== Аудио (мягкая музыка + sfx) ====
 const AudioKit=(()=>{let C=null,gM=null,gMu=null,mu=null,playing=false;
-function ensure(){ if(!C){ const A=window.AudioContext||window.webkitAudioContext; if(!A) return null; C=new A(); gM=C.createGain();gM.gain.value=.9;gM.connect(C.destination); gMu=C.createGain();gMu.gain.value=.12;gMu.connect(C.destination);} return C;}
-async function resume(){ const c=ensure(); if(c&&c.state==='suspended') await c.resume(); }
+function ensure(){
+  if(!C){
+    const A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
+    C=new A();
+    gM=C.createGain();gM.gain.value=.9;gM.connect(C.destination);
+    gMu=C.createGain();gMu.gain.value=.12;gMu.connect(C.destination);
+  }
+  return C;
+}
+function resume(){ const c=ensure(); if(c&&c.state==='suspended') return c.resume(); return Promise.resolve(); }
 function beep(f=480,d=.07){ const c=ensure(); if(!c) return; resume(); const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(gM); g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.start(); o.stop(c.currentTime+d); }
-async function startMusic(){ if(playing) return; const c=ensure(); if(!c) return; await resume(); mu=C.createGain(); mu.gain.value=.0001; mu.connect(gMu);
+function startMusic(){ if(playing) return; const c=ensure(); if(!c) return; resume().then(()=>{
+  mu=C.createGain(); mu.gain.value=.0001; mu.connect(gMu);
   const root=196, tones=[root, root*5/4, root*3/2, root*15/8];
   tones.forEach((f,i)=>{ const o=C.createOscillator(); o.type='sine'; o.frequency.value=f; const g=C.createGain(); g.gain.value=.0002; o.connect(g); g.connect(mu); o.start(); const l=C.createOscillator(), lg=C.createGain(); l.type='sine'; l.frequency.value=.04+i*.02; lg.gain.value=18; l.connect(lg); lg.connect(o.frequency); l.start(); });
   mu.gain.exponentialRampToValueAtTime(.35,C.currentTime+1.4); playing=true;
+});
 }
-function toggle(on){ if(on){ startMusic(); } else if(playing&&mu){ const c=ensure(); mu.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.5); setTimeout(()=>{try{mu.disconnect();}catch{} mu=null; playing=false;},650); }}
-document.addEventListener('pointerdown', ()=>{ if(ui.music.checked) startMusic(); }, {once:true});
+function toggle(on){ const c=ensure(); if(!c) return; resume(); if(on){ startMusic(); } else if(playing&&mu){ mu.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.5); setTimeout(()=>{try{mu.disconnect();}catch{} mu=null; playing=false;},650); }}
+document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); if(ui.music.checked) startMusic(); }, {once:true});
 return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)}, music:toggle };
 })();
 
