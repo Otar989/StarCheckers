@@ -105,7 +105,36 @@ function showBestMoveHint(){ const side = state.mode==='ai' ? W : state.turn; co
 
 // ==== Анимация ====
 function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-function animateMove(path,piece,onDone){const S=cv.width/8;state.anim={path,piece,idx:0,start:performance.now(),dur:0,x:0,y:0,from:path[0],to:path[path.length-1]};function segDur(i){const a=path[i],b=path[i+1];const dist=Math.hypot((b[1]-a[1]),(b[0]-a[0]))*S;return Math.min(220,dist/(S/150));}state.anim.dur=segDur(0);function step(now){const a=state.anim.path[state.anim.idx],b=state.anim.path[state.anim.idx+1];const t=Math.min(1,(now-state.anim.start)/state.anim.dur);const e=easeInOutCubic(t);state.anim.x=(a[1]+.5+(b[1]-a[1])*e)*S;state.anim.y=(a[0]+.5+(b[0]-a[0])*e)*S;draw();if(t<1){requestAnimationFrame(step);}else{state.anim.idx++;if(state.anim.idx>=state.anim.path.length-1){state.anim=null;onDone();}else{state.anim.start=now;state.anim.dur=segDur(state.anim.idx);requestAnimationFrame(step);}}}draw();requestAnimationFrame(step);}
+function animateMove(path,piece,onDone){
+  const S=cv.width/8;
+  const [sr,sc]=path[0];
+  state.anim={path,piece,idx:0,start:performance.now(),dur:0,x:(sc+.5)*S,y:(sr+.5)*S,from:path[0],to:path[path.length-1]};
+  function segDur(i){const a=path[i],b=path[i+1];const dist=Math.hypot((b[1]-a[1]),(b[0]-a[0]))*S;return Math.min(220,dist/(S/150));}
+  state.anim.dur=segDur(0);
+  function step(now){
+    const a=state.anim.path[state.anim.idx],b=state.anim.path[state.anim.idx+1];
+    const t=Math.min(1,(now-state.anim.start)/state.anim.dur);
+    const e=easeInOutCubic(t);
+    state.anim.x=(a[1]+.5+(b[1]-a[1])*e)*S;
+    state.anim.y=(a[0]+.5+(b[0]-a[0])*e)*S;
+    draw();
+    if(t<1){
+      requestAnimationFrame(step);
+    }else{
+      state.anim.idx++;
+      if(state.anim.idx>=state.anim.path.length-1){
+        state.anim=null;
+        onDone();
+      }else{
+        state.anim.start=now;
+        state.anim.dur=segDur(state.anim.idx);
+        requestAnimationFrame(step);
+      }
+    }
+  }
+  draw();
+  requestAnimationFrame(step);
+}
 
 // ==== Управление ====
 function pointerPos(evt){const rect=cv.getBoundingClientRect();return{ x:(evt.clientX-rect.left)*(cv.width/rect.width), y:(evt.clientY-rect.top)*(cv.height/rect.height) };
