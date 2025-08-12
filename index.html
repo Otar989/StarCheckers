@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <meta http-equiv="Cache-Control" content="no-store"/>
 <title>Русские шашки</title>
+<link rel="stylesheet" href="./styles.css?v=1">
 <style>
   :root{
     --bg1:#1b1f29; --bg2:#2a2f3a; --panel:#2e323d; --accent:#c6934b;
@@ -78,7 +79,14 @@
           </label>
         </div>
         <div class="col">
-          <h3>Звук</h3>
+          <h3>Оформление</h3>
+          <label class="switch">Тема
+            <select id="themeSelect" class="select" name="theme">
+              <option value="classic">Classic</option>
+              <option value="walnut">Walnut</option>
+              <option value="graphite">Graphite</option>
+            </select>
+          </label>
           <label class="switch"><input id="musicOn" type="checkbox" checked/> Музыка</label>
           <label class="switch"><input id="sfxOn" type="checkbox" checked/> Звуки ходов</label>
           <p style="opacity:.8">Музыка включится после первого нажатия.</p>
@@ -103,50 +111,23 @@
         <div>Статус: <b id="statusLabel">—</b></div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
-<script>
-/* ====================== Аудио ====================== */
-const AudioBus = (() => {
-  const ctx = {ac:null, music:null, gain:{music:null,sfx:null}, unlocked:false};
-  function ensure(){ if(ctx.ac) return;
-    ctx.ac = new (window.AudioContext||window.webkitAudioContext)();
-    ctx.gain.music = ctx.ac.createGain(); ctx.gain.music.gain.value=.25;
-    ctx.gain.sfx   = ctx.ac.createGain(); ctx.gain.sfx.gain.value=.6;
-    ctx.gain.music.connect(ctx.ac.destination);
-    ctx.gain.sfx.connect(ctx.ac.destination);
-  }
-  function unlock(){ ensure(); if(ctx.unlocked) return;
-    const b = ctx.ac.createBuffer(1, 1, 22050); const src = ctx.ac.createBufferSource(); src.buffer=b; src.connect(ctx.ac.destination); src.start(0);
-    ctx.unlocked = true;
-  }
-  function tone(freq,ms,which="sfx"){
-    ensure(); const o=ctx.ac.createOscillator(), g=ctx.ac.createGain();
-    o.frequency.value=freq; o.type="triangle"; g.gain.setValueAtTime(.0001,ctx.ac.currentTime);
-    g.gain.linearRampToValueAtTime(which==="sfx"? .6:.2, ctx.ac.currentTime+.01);
-    g.gain.exponentialRampToValueAtTime(.0001, ctx.ac.currentTime+ms/1000);
-    o.connect(g); g.connect(ctx.gain[which]); o.start(); o.stop(ctx.ac.currentTime+ms/1000+0.05);
-  }
-  function playMove(){ tone(520,120,"sfx"); }
-  function playCapture(){ tone(220,220,"sfx"); }
-  function playPromote(){ tone(880,260,"sfx"); }
-  function loopMusic(on){
-    ensure();
-    if(on){
-      if(ctx.music){ return; }
-      const o=ctx.ac.createOscillator(), l=ctx.ac.createOscillator();
-      o.type="sine"; l.type="triangle"; o.frequency.value=140; l.frequency.value=280;
-      o.connect(ctx.gain.music); l.connect(ctx.gain.music);
-      ctx.music={o,l}; o.start(); l.start();
-    }else{
-      if(ctx.music){ ctx.music.o.stop(); ctx.music.l.stop(); ctx.music=null; }
+<script type="module">
+  import { initAudio, toggleMusic, playMove as playMoveSfx } from './src/audio.js?v=1';
+  import { showEndModal } from './src/modal.js?v=1';
+  import { getLegalMoves } from './src/moves.js?v=1';
+  window.AudioAPI = { initAudio, toggleMusic, playMove: playMoveSfx, showEndModal, getLegalMoves };
+  window.addEventListener('pointerdown', () => {
+    if (!window.__audioStarted) {
+      window.__audioStarted = true;
+      initAudio();
     }
-  }
-  return {unlock, playMove, playCapture, playPromote, loopMusic,
-          setMusicGain:v=>{ensure(); ctx.gain.music.gain.value=v},
-          setSfxGain:v=>{ensure(); ctx.gain.sfx.gain.value=v}}
-})();
+  }, { once:true });
+</script>
+
+<script>
 
 /* =============== Вспомогательные структуры =============== */
 const SIZE=8, DARK=1, LIGHT=0;
@@ -169,6 +150,7 @@ const UI = {
   mode:document.getElementById('mode'),
   yourColor:document.getElementById('yourColor'),
   musicOn:document.getElementById('musicOn'), sfxOn:document.getElementById('sfxOn'),
+  theme:document.getElementById('themeSelect'),
   tMusic:document.getElementById('toggleMusic'), tSfx:document.getElementById('toggleSfx'),
   undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
   // элементы для панели тестов удалены
@@ -194,6 +176,30 @@ function startBoard(){
 /* =============== Рендер =============== */
 const ctx = UI.board.getContext('2d');
 let cellPx = 1024/SIZE;
+
+const savedSettings = JSON.parse(localStorage.getItem('settings')||'{}');
+UI.musicOn.checked = savedSettings.music ?? true;
+UI.sfxOn.checked = savedSettings.sfx ?? true;
+UI.theme.value = savedSettings.theme || 'classic';
+document.body.classList.add('theme-'+UI.theme.value);
+UI.tMusic.checked = UI.musicOn.checked;
+UI.tSfx.checked = UI.sfxOn.checked;
+
+function saveSettings(){
+  localStorage.setItem('settings', JSON.stringify({
+    music:UI.musicOn.checked,
+    sfx:UI.sfxOn.checked,
+    theme:UI.theme.value
+  }));
+}
+
+UI.musicOn.addEventListener('change', ()=>{ saveSettings(); if(window.AudioAPI) window.AudioAPI.toggleMusic(UI.musicOn.checked); });
+UI.sfxOn.addEventListener('change', ()=>{ UI.tSfx.checked = UI.sfxOn.checked; saveSettings(); });
+UI.theme.addEventListener('change', ()=>{
+  document.body.classList.remove('theme-classic','theme-walnut','theme-graphite');
+  document.body.classList.add('theme-'+UI.theme.value);
+  saveSettings();
+});
 function draw(){
   const b=State.board || Array.from({length:SIZE},()=>Array(SIZE).fill(null));
   ctx.clearRect(0,0,UI.board.width,UI.board.height);
@@ -332,8 +338,7 @@ function playMove(state, move, {silent=false}={}){
     history:[...state.history, {move, board:state.board}],
   };
   if(!silent){
-    if(captures.length) AudioBus.playCapture(); else AudioBus.playMove();
-    if(isPromotion) AudioBus.playPromote();
+    if(window.AudioAPI && (UI.sfxOn.checked && UI.tSfx.checked)) window.AudioAPI.playMove();
   }
   const must = state.mustCapture && captures.length>0;
   if(must){
@@ -352,6 +357,10 @@ function playMove(state, move, {silent=false}={}){
   if(oppMoves.length===0){
     next.gameOver = true;
     State.status = (next.turn===LIGHT? "Белые":"Чёрные")+" без ходов. Победа!";
+    if(window.AudioAPI){
+      const result = (State.humanColor === next.turn)? 'lose':'win';
+      window.AudioAPI.showEndModal({result, onNew:newGameFromMenu, onSettings:()=>toScreen('menu')});
+    }
   }else{
     State.status = "Идёт игра";
   }
@@ -398,7 +407,6 @@ function boardXY(evt){
 }
 UI.board.addEventListener('pointerdown', e=>{
   if(State.lock||State.gameOver) return;
-  AudioBus.unlock();
   const [x,y]=boardXY(e);
   const p=State.board[y][x]; if(!p) return;
   if(p.c!==State.turn) return;
@@ -457,10 +465,7 @@ async function thinkAI(){
   State.lock=false; syncUI();
 }
 function newGameFromMenu(){
-  AudioBus.unlock();
-  AudioBus.loopMusic(true);
-  AudioBus.setMusicGain(UI.musicOn.checked? .25:0);
-  AudioBus.setSfxGain(UI.sfxOn.checked? .6:0);
+  if(window.AudioAPI) window.AudioAPI.toggleMusic(UI.musicOn.checked);
   State.board=startBoard(); State.turn=LIGHT; State.history=[]; State.gameOver=false; State.status="Идёт игра";
   State.mustCapture = UI.mustCap.checked;
   State.mode = UI.mode.value;
@@ -494,54 +499,12 @@ UI.hint.addEventListener('click', ()=>{
   draw();
 });
 UI.restart.addEventListener('click', ()=>{ toScreen('menu'); });
-UI.tMusic.addEventListener('change', e=>AudioBus.setMusicGain(e.target.checked? .25:0));
-UI.tSfx.addEventListener('change', e=>AudioBus.setSfxGain(e.target.checked? .6:0));
+UI.tMusic.addEventListener('change', e=>{ if(window.AudioAPI) window.AudioAPI.toggleMusic(e.target.checked); });
+UI.tSfx.addEventListener('change', e=>{ UI.sfxOn.checked = e.target.checked; saveSettings(); });
 UI.start.addEventListener('click', newGameFromMenu);
 UI.toMenu.addEventListener('click', ()=>toScreen('menu'));
 (function boot(){ draw(); })();
 
-/* ====================== ТЕСТЫ ====================== */
-function tAssert(cond,msg){ if(!cond) throw new Error(msg); }
-function runTests(){
-  const logs=[];
-  function log(s){ logs.push(s); console.log(s); }
-  try{
-    const b=startBoard();
-    let w=0,d=0; for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){ const p=b[y][x]; if(p){ if(p.c===LIGHT) w++; else d++; }}
-    tAssert(w===12 && d===12, "Стартовые: 12/12"); log("OK: стартовые 12/12");
-    const m1=allMoves(b,LIGHT,true);
-    tAssert(m1.length>0,"Ходы у белых есть при старте"); log("OK: белые имеют стартовые ходы");
-    const any=m1.find(m=>m.captures.length===0) || m1[0];
-    const s={board:b,turn:LIGHT,history:[],mustCapture:true};
-    const n=playMove(s,any,{silent:true});
-    tAssert(n.board !== b && n.turn===DARK,"playMove меняет состояние и ход"); log("OK: playMove выполняет ход");
-    const bb=Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-    bb[1][2]=Piece(LIGHT,false);
-    const mv={from:{x:2,y:1},to:{x:1,y:0},captures:[],piece:bb[1][2]};
-    const ns=playMove({board:bb,turn:LIGHT,history:[],mustCapture:false},mv,{silent:true});
-    tAssert(ns.board[0][1] && ns.board[0][1].k===true,"Промоция в дамку"); log("OK: промоция работает");
-    const cb=Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-    cb[5][2]=Piece(LIGHT,true); cb[4][3]=Piece(DARK,false);
-    const ms = movesFor(cb,2,5,true);
-    const cap = ms.find(m=>m.captures.length===1);
-    tAssert(!!cap,"Дамка может бить через клетку"); log("OK: дамка бьёт на расстоянии");
-    // Дополнительные тесты
-    const tb=Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-    tb[5][2]=Piece(LIGHT,false); tb[4][3]=Piece(DARK,false); tb[2][5]=Piece(DARK,false); tb[6][5]=Piece(LIGHT,false); tb[5][6]=Piece(DARK,false);
-    const am=allMoves(tb,LIGHT,true);
-    tAssert(am.length===1 && am[0].captures.length===2, "Выбран только маршрут с макс. взятиями"); log("OK: при обязательном бое выбирается макс маршрут");
-    const pb=Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-    pb[2][1]=Piece(LIGHT,false); pb[1][2]=Piece(DARK,false); pb[1][4]=Piece(DARK,false);
-    const pm=movesFor(pb,1,2,true)[0];
-    tAssert(pm.captures.length===2, "Серия продолжается после промоции"); log("OK: серия продолжается после промоции");
-    console.info('Тесты: все пройдены');
-  }catch(e){
-    logs.push("Ошибка теста: "+e.message);
-    console.error('Ошибка теста:', e);
-  }
-  return logs;
-}
-window.runTests = runTests;
 </script>
 </body>
 </html>
