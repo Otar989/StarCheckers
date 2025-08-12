@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-store"/>
 <title>Русские шашки</title>
 <style>
   :root{
@@ -40,8 +41,6 @@
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .meta{margin-top:10px;font-size:14px;opacity:.9;display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .hidden{display:none}
-  details.tests{margin-top:14px;background:#222735;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.06)}
-  .badge{font-size:12px;padding:2px 8px;background:#394053;border-radius:999px;margin-left:8px;color:#cde}
 </style>
 </head>
 <body>
@@ -90,10 +89,6 @@
           <button id="startGame" class="btn">Новая игра</button>
         </div>
       </div>
-      <details class="tests">
-        <summary>Тесты<span id="testsBadge" class="badge">не запущены</span></summary>
-        <pre id="testsLog" style="white-space:pre-wrap"></pre>
-      </details>
     </div>
 
     <div id="screenGame" class="screens hidden">
@@ -180,7 +175,7 @@ const UI = {
   musicOn:document.getElementById('musicOn'), sfxOn:document.getElementById('sfxOn'),
   tMusic:document.getElementById('toggleMusic'), tSfx:document.getElementById('toggleSfx'),
   undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
-  testsLog:document.getElementById('testsLog'), testsBadge:document.getElementById('testsBadge')
+  // элементы для панели тестов удалены
 };
 
 const State = {
@@ -508,13 +503,13 @@ UI.tMusic.addEventListener('change', e=>AudioBus.setMusicGain(e.target.checked? 
 UI.tSfx.addEventListener('change', e=>AudioBus.setSfxGain(e.target.checked? .6:0));
 UI.start.addEventListener('click', newGameFromMenu);
 UI.toMenu.addEventListener('click', ()=>toScreen('menu'));
-(function boot(){ draw(); runTests(); })();
+(function boot(){ draw(); })();
 
 /* ====================== ТЕСТЫ ====================== */
 function tAssert(cond,msg){ if(!cond) throw new Error(msg); }
 function runTests(){
   const logs=[];
-  function log(s){ logs.push(s); }
+  function log(s){ logs.push(s); console.log(s); }
   try{
     const b=startBoard();
     let w=0,d=0; for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){ const p=b[y][x]; if(p){ if(p.c===LIGHT) w++; else d++; }}
@@ -544,13 +539,14 @@ function runTests(){
     pb[2][1]=Piece(LIGHT,false); pb[1][2]=Piece(DARK,false); pb[1][4]=Piece(DARK,false);
     const pm=movesFor(pb,1,2,true)[0];
     tAssert(pm.captures.length===2, "Серия продолжается после промоции"); log("OK: серия продолжается после промоции");
-    document.getElementById('testsBadge').textContent="все пройдены";
+    console.info('Тесты: все пройдены');
   }catch(e){
-    document.getElementById('testsBadge').textContent="ошибки";
     logs.push("Ошибка теста: "+e.message);
+    console.error('Ошибка теста:', e);
   }
-  document.getElementById('testsLog').textContent=logs.join("\n");
+  return logs;
 }
+window.runTests = runTests;
 </script>
 </body>
 </html>

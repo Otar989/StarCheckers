@@ -24,7 +24,8 @@ app.get('/health', (_,res)=>res.json({ok:true, time:Date.now()}));
 
 // Раздаём статику из ../public
 const publicDir = path.join(__dirname, '../public');
-app.use(express.static(publicDir));
+app.use((req,res,next)=>{ res.set('Cache-Control','no-store'); next(); });
+app.use(express.static(publicDir, { etag:false, lastModified:false }));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));

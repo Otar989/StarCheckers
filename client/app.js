@@ -93,7 +93,7 @@ function refreshColors(){const cs=getComputedStyle(root); COLORS.dark=cs.getProp
 refreshColors();
 root.addEventListener('transitionend',refreshColors);
 function drawPiece(x,y,p,ghost=false){const S=cv.width/8,rad=S*0.42;const grad=ctx.createRadialGradient(x-rad*0.3,y-rad*0.3,rad*0.2,x,y,rad);if(p===W||p===WK){grad.addColorStop(0,'#fff');grad.addColorStop(1,'#d6c4a5');}else{grad.addColorStop(0,'#475569');grad.addColorStop(1,'#1e293b');}ctx.save();if(ghost)ctx.globalAlpha=.8;ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=rad*0.3;ctx.fillStyle=grad;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;if(p===WK||p===BK){ctx.font=`${S*.36}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👑',x,y+1);}ctx.restore();}
-function draw(){const Wc=cv.width,S=Wc/8;ctx.clearRect(0,0,Wc,Wc);for(let r=0;r<8;r++)for(let c=0;c<8;c++){const dark=(r+c)%2===1;const grad=ctx.createLinearGradient(c*S,r*S,(c+1)*S,(r+1)*S);if(dark){grad.addColorStop(0,COLORS.dark);grad.addColorStop(1,'#1f2738');}else{grad.addColorStop(0,COLORS.light);grad.addColorStop(1,'#d2c1a3');}ctx.fillStyle=grad;ctx.fillRect(c*S,r*S,S,S);}if((state.hints||state.hintOnce)&&state.legal.length){for(const m of state.legal){const[tr,tc]=m.to;ctx.save();ctx.translate((tc+.5)*S,(tr+.5)*S);ctx.fillStyle=(m.caps.length?COLORS.cap:COLORS.acc)+'aa';ctx.beginPath();ctx.arc(0,0,S*0.18,0,Math.PI*2);ctx.fill();ctx.restore();}}if(state.selected){const[sr,sc]=state.selected;ctx.lineWidth=S*0.08;ctx.strokeStyle=COLORS.acc;ctx.strokeRect(sc*S+S*0.08,sr*S+S*0.08,S*0.84,S*0.84);}for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(state.anim && ((r===state.anim.from[0]&&c===state.anim.from[1])||(r===state.anim.to[0]&&c===state.anim.to[1]))) continue;const p=state.board[r][c];if(p===E)continue;drawPiece((c+.5)*S,(r+.5)*S,p);}if(state.anim){drawPiece(state.anim.x,state.anim.y,state.anim.piece);}if(state.drag){drawPiece(state.drag.x,state.drag.y,state.drag.piece,true);}state.hintOnce=false;}
+function draw(){const Wc=cv.width,S=Wc/8;ctx.clearRect(0,0,Wc,Wc);for(let r=0;r<8;r++)for(let c=0;c<8;c++){const dark=(r+c)%2===1;const grad=ctx.createLinearGradient(c*S,r*S,(c+1)*S,(r+1)*S);if(dark){grad.addColorStop(0,COLORS.dark);grad.addColorStop(1,'#1f2738');}else{grad.addColorStop(0,COLORS.light);grad.addColorStop(1,'#d2c1a3');}ctx.fillStyle=grad;ctx.fillRect(c*S,r*S,S,S);}if((state.hints||state.hintOnce||state.selected)&&state.legal.length){for(const m of state.legal){const[tr,tc]=m.to;ctx.save();ctx.translate((tc+.5)*S,(tr+.5)*S);ctx.fillStyle=(m.caps.length?COLORS.cap:COLORS.acc)+'aa';ctx.beginPath();ctx.arc(0,0,S*0.18,0,Math.PI*2);ctx.fill();ctx.restore();}}if(state.selected){const[sr,sc]=state.selected;ctx.lineWidth=S*0.08;ctx.strokeStyle=COLORS.acc;ctx.strokeRect(sc*S+S*0.08,sr*S+S*0.08,S*0.84,S*0.84);}for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(state.anim && ((r===state.anim.from[0]&&c===state.anim.from[1])||(r===state.anim.to[0]&&c===state.anim.to[1]))) continue;const p=state.board[r][c];if(p===E)continue;drawPiece((c+.5)*S,(r+.5)*S,p);}if(state.anim){drawPiece(state.anim.x,state.anim.y,state.anim.piece);}if(state.drag){drawPiece(state.drag.x,state.drag.y,state.drag.piece,true);}state.hintOnce=false;}
 
 // ==== Utility ====
 function mvStr(m){if(!m)return'';const[fr,fc]=m.from,[tr,tc]=m.to;const cap=m.caps.length?'x':'-';return `${String.fromCharCode(97+fc)}${8-fr}${cap}${String.fromCharCode(97+tc)}${8-tr}`;}
@@ -145,7 +145,29 @@ function onPointerDown(e){if(state.mode==='online'&&state.myColor&&state.turn!==
 function onPointerMove(e){if(!state.drag)return;const pos=pointerPos(e);state.drag.x=pos.x;state.drag.y=pos.y;draw();}
 function onPointerUp(e){document.removeEventListener('pointermove',onPointerMove);document.removeEventListener('pointerup',onPointerUp);const pos=pointerPos(e);const moved=startPos&&Math.hypot(pos.x-startPos.x,pos.y-startPos.y)>8;if(state.drag&&moved){const {r,c}=cellFromPos(pos);const mv=state.legal.find(m=>m.to[0]===r&&m.to[1]===c);if(mv){performMove(mv);}else{state.drag=null;draw();}}else{const {r,c}=cellFromPos(pos);onCellClick(r,c);}state.drag=null;startPos=null;}
 cv.addEventListener('pointerdown',onPointerDown);
-function onCellClick(r,c){if(state.selected){const m=state.legal.find(m=>m.to[0]===r&&m.to[1]===c);if(m){performMove(m);return;}}const p=state.board[r][c];const side=state.turn===W;if((side&&(p===W||p===WK))||(!side&&(p===B||p===BK))){state.selected=[r,c];state.legal=genMoves(state.board,state.turn).filter(m=>m.from[0]===r&&m.from[1]===c);if(state.sfx)AudioKit.sfx.sel();}else{state.selected=null;state.legal=[];}draw();}
+function onCellClick(r,c){
+  if(state.selected){
+    const m=state.legal.find(m=>m.to[0]===r&&m.to[1]===c);
+    if(m){performMove(m);return;}
+  }
+  const p=state.board[r][c];
+  const side=state.turn===W;
+  if((side&&(p===W||p===WK))||(!side&&(p===B||p===BK))){
+    const legal=genMoves(state.board,state.turn).filter(m=>m.from[0]===r&&m.from[1]===c);
+    if(legal.length){
+      state.selected=[r,c];
+      state.legal=legal;
+      if(state.sfx)AudioKit.sfx.sel();
+    }else{
+      state.selected=null;
+      state.legal=[];
+    }
+  }else{
+    state.selected=null;
+    state.legal=[];
+  }
+  draw();
+}
 
 // ==== Ходы ====
 function performMove(mv){
