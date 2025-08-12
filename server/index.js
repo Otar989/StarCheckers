@@ -20,11 +20,11 @@ const PORT = process.env.PORT || 8080;
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
 // Health
-app.get('/health', (_,res)=>res.json({ok:true, time:Date.now()}));
+app.get('/health', (_,res)=>res.json({ok:true}));
 
-// Статика: отдаём клиент из ../client
-const clientDir = path.join(__dirname, '../client');
-app.use('/', express.static(clientDir, { index: 'index.html' }));
+// Статика: отдаём клиент из ../public
+const publicDir = path.join(__dirname, '../public');
+app.use('/', express.static(publicDir, { index: 'index.html' }));
 
 const server = createServer(app);
 
