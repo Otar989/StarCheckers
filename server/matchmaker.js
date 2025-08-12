@@ -130,7 +130,7 @@ export function createMatchmaker() {
       return;
     }
     const mv = msg.move;
-    const side = ws.color === 'W' ? 'w' : 'b';
+    const side = ws.color;
     if (!validateMove(room.board, mv, side)) {
       send(ws, { type: 'error', error: 'Invalid move' });
       return;
