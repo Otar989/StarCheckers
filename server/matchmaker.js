@@ -1,4 +1,7 @@
-export function createMatchmaker({ verifyInitData }) {
+export function createMatchmaker() {
+  // Authentication is handled at the WebSocket layer. The matchmaker accepts
+  // both authenticated and anonymous players, so no extra verification is
+  // performed here.
   const rooms = new Map();
   const queue = [];
 
