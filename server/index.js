@@ -22,9 +22,13 @@ const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 // Health
 app.get('/health', (_,res)=>res.json({ok:true, time:Date.now()}));
 
-// Статика: отдаём клиент из ../client
-const clientDir = path.join(__dirname, '../client');
-app.use('/', express.static(clientDir, { index: 'index.html' }));
+// Раздаём статику из ../public
+const publicDir = path.join(__dirname, '../public');
+app.use(express.static(publicDir));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
 
 const server = createServer(app);
 
