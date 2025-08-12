@@ -1,11 +1,68 @@
-const http = require('http');
+import 'dotenv/config';
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { createMatchmaker } from './matchmaker.js';
+import { verifyInitData } from './telegram.js';
 
-const PORT = process.env.PORT || 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const server = http.createServer((req, res) => {
-  res.end('Server is running');
+const app = express();
+app.disable('x-powered-by');
+app.use(express.json());
+app.use(cookieParser());
+
+const PORT = process.env.PORT || 8080;
+const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
+
+// Health
+app.get('/health', (_,res)=>res.json({ok:true, time:Date.now()}));
+
+// Статика: отдаём клиент из ../client
+const clientDir = path.join(__dirname, '../client');
+app.use('/', express.static(clientDir, { index: 'index.html' }));
+
+const server = createServer(app);
+
+// WebSocket
+const wss = new WebSocketServer({ server, path: '/ws' });
+const mm = createMatchmaker({ verifyInitData });
+
+wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  ws.on('pong', ()=> ws.isAlive = true);
+
+  ws.on('message', async raw => {
+    let msg;
+    try { msg = JSON.parse(raw.toString()); } catch { return; }
+
+    if (msg.type === 'auth') {
+      const { initData } = msg;
+      const ok = await verifyInitData(initData);
+      ws.user = ok?.user ?? { id: 'anon_'+Math.random().toString(36).slice(2), name: 'Anon' };
+      ws.send(JSON.stringify({ type: 'auth_ok', user: ws.user }));
+      return;
+    }
+
+    mm.onMessage(ws, msg);
+  });
+
+  ws.on('close', () => mm.onDisconnect(ws));
 });
+
+// ping/pong
+setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (!ws.isAlive) return ws.terminate();
+    ws.isAlive = false; ws.ping();
+  });
+}, 15000);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Public: ${PUBLIC_URL}`);
 });
