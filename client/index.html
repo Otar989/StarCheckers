@@ -1,1 +1,56 @@
-<!DOCTYPE html><html><head><meta charset='UTF-8'><title>StarCheckers</title></head><body><h1>StarCheckers Game</h1></body></html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>StarCheckers</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand">⭐ StarCheckers</div>
+  <div class="controls">
+    <select id="mode">
+      <option value="ai">Против ИИ</option>
+      <option value="hotseat">2 игрока</option>
+      <option value="online">Онлайн</option>
+    </select>
+    <select id="level">
+      <option value="0">Лёгкая</option>
+      <option value="1" selected>Средняя</option>
+      <option value="2">Сложная</option>
+      <option value="3">Мастер</option>
+    </select>
+    <input id="stake" type="number" min="0" step="1" placeholder="Ставка (Stars)">
+    <button id="find">Играть онлайн</button>
+    <button id="leave">Выйти</button>
+    <label><input id="music" type="checkbox" checked> Музыка</label>
+    <label><input id="sfx" type="checkbox" checked> Звуки</label>
+    <label><input id="hints" type="checkbox"> Подсказки</label>
+    <button id="hintOnce">Подсказка</button>
+    <button id="new">Новая</button>
+    <button id="undo">Отменить</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="board">
+    <div class="canvasBox"><canvas id="cv" width="1024" height="1024" aria-label="Шашечная доска"></canvas></div>
+  </section>
+  <aside class="side">
+    <div class="row"><span>Ход:</span><strong id="turn">Вы</strong></div>
+    <div class="row"><span>Счёт:</span><span id="score">12 / 12</span></div>
+    <div class="row"><span>Статус:</span><span id="status">Готово</span></div>
+    <div class="moves" id="moves"></div>
+    <div class="online" id="online">
+      <div class="row"><span>Комната:</span><b id="roomId">—</b></div>
+      <div class="row"><span>Ваша сторона:</span><b id="myColor">—</b></div>
+      <div class="row"><button id="joinById">Войти по коду</button><input id="roomInput" placeholder="код"/></div>
+    </div>
+  </aside>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
