@@ -1,0 +1,47 @@
+/* ТЕМЫ */
+:root{
+  --bg:#0c1016; --panel:rgba(255,255,255,.06); --text:#eef2f7;
+  --tile-dark:#2b3446; --tile-light:#c8b69a;
+  --accent:#7dd3fc; --accent-2:#fca5a5;
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+:root.light{
+  --bg:#f5f7fb; --panel:rgba(0,0,0,.06); --text:#0d1b2a;
+  --tile-dark:#9e7a4a; --tile-light:#ecd9b9;
+  --accent:#2563eb; --accent-2:#dc2626;
+}
+html,body{height:100%}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--text); background:radial-gradient(1200px 800px at 10% -10%, rgba(125,211,252,.08), transparent) , linear-gradient(180deg,#0b1020, var(--bg));
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height:1.35;
+}
+.top{
+  position:sticky; top:0; z-index:10; backdrop-filter: saturate(140%) blur(6px);
+  background:var(--panel); box-shadow:var(--shadow);
+  display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:10px 12px;
+}
+.brand{font-weight:800; letter-spacing:.2px}
+.controls{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.chk{display:flex; gap:6px; align-items:center}
+button,select,input{font:inherit; border-radius:8px; border:1px solid rgba(255,255,255,.12); padding:6px 10px; background:rgba(255,255,255,.06); color:inherit}
+button:hover{filter:brightness(1.05)}
+button:active{transform:translateY(1px)}
+input::placeholder{opacity:.7}
+.layout{min-height:100dvh; display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:12px; padding:12px}
+@media (max-width: 980px){ .layout{ grid-template-columns:1fr } }
+.board{ background:var(--panel); border-radius:14px; padding:12px; box-shadow:var(--shadow) }
+.side{  background:var(--panel); border-radius:14px; padding:12px; box-shadow:var(--shadow); display:grid; gap:10px; max-height:calc(100dvh - 120px); overflow:auto }
+.canvasBox{ position:relative; width:100%; max-width:min(92vw,780px); margin:0 auto }
+canvas{ width:100%; height:auto; aspect-ratio:1/1; display:block; border-radius:12px; background:conic-gradient(from 45deg at 50% 50%, #0f172a 0 25%, #111827 0 50%, #0f172a 0 75%, #111827 0 100%)}
+
+/* Список ходов */
+.moves{ background:rgba(255,255,255,.06); border-radius:10px; padding:8px; max-height:260px; overflow:auto; font-variant:tabular-nums }
+.moves .cur{ color:var(--accent); font-weight:700 }
+
+/* Адаптив элементов управления */
+.controls select, .controls input, .controls button{ min-height:34px }
+@media (max-width:560px){
+  .controls{ gap:6px }
+  .controls select, .controls input, .controls button{ min-width: calc(50% - 6px) }
+}
