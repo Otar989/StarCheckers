@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Русские шашки</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/board.css">
+</head>
+<body>
+  <div id="screen-menu" class="screen active">
+    <h1>Русские шашки</h1>
+    <div class="menu">
+      <button id="btn-start">Играть</button>
+      <button id="btn-settings">Настройки</button>
+      <div class="options">
+        <label>Режим:
+          <select id="opt-mode">
+            <option value="1">1 игрок</option>
+            <option value="2">2 игрока</option>
+          </select>
+        </label>
+        <label>Сложность:
+          <select id="opt-level">
+            <option value="1">Лёгкая</option>
+            <option value="2" selected>Средняя</option>
+            <option value="3">Сложная</option>
+          </select>
+        </label>
+        <label>Цвет:
+          <select id="opt-color">
+            <option value="w" selected>Белые</option>
+            <option value="b">Чёрные</option>
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" id="opt-force" checked> Бить обязательно
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen">
+    <canvas id="board" width="600" height="600"></canvas>
+    <div id="hud">
+      <button id="btn-new">Новая</button>
+      <button id="btn-undo">Отменить</button>
+      <button id="btn-settings2">Настройки</button>
+      <span id="turn-indicator"></span>
+    </div>
+  </div>
+
+  <div id="screen-settings" class="screen">
+    <h2>Настройки</h2>
+    <label><input type="checkbox" id="set-music"> Музыка</label>
+    <label><input type="checkbox" id="set-sfx"> SFX</label>
+    <button id="btn-back">Назад</button>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/tests.js"></script>
+</body>
+</html>
