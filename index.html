@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-store"/>
 <title>Русские шашки</title>
 <link rel="stylesheet" href="./styles.css?v=1">
@@ -12,7 +12,7 @@
     --light:#e8d2ad; --dark:#7b5a2f; --red:#8b2d2d; --white:#f5f2ea;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#151923,#1a2030 40%,#0f1320);touch-action:none;overscroll-behavior:none;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#151923,#1a2030 40%,#0f1320);}
   body{font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial,sans-serif;color:#eef2ff;display:flex;justify-content:center;align-items:center;overflow:hidden}
   .wrap{width:min(100vw,900px);padding:16px}
   .card{
@@ -45,7 +45,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="app" class="wrap">
   <div class="card">
     <div class="header">
       <div class="brand">Русские шашки</div>
@@ -95,7 +95,7 @@
     </div>
 
     <div id="screenGame" class="screens hidden">
-      <div class="boardContainer"><canvas id="board" width="1024" height="1024"></canvas></div>
+      <div class="boardContainer"><canvas id="board" class="board" width="1024" height="1024"></canvas></div>
       <div class="toolbar">
         <button id="btnUndo" class="btn secondary">Отменить</button>
         <button id="btnHint" class="btn secondary">Подсказка</button>
@@ -111,6 +111,7 @@
 </div>
 </div>
 
+<script src="./src/gestures-guard.js"></script>
 <script type="module">
   import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';
   import { showEndModal } from './src/modal.js?v=1';
@@ -125,6 +126,10 @@
 </script>
 
 <script>
+if (window.Telegram && Telegram.WebApp) {
+  try { Telegram.WebApp.expand(); } catch(e){}
+  try { Telegram.WebApp.setBackgroundColor('#0f172a'); } catch(e){}
+}
 
 /* =============== Вспомогательные структуры =============== */
 const SIZE=8, DARK=1, LIGHT=0;
@@ -406,13 +411,16 @@ function minimax(b, turn, depth, mustCap, me, alpha=-1e9, beta=1e9){
 }
 
 /* =============== Взаимодействие (тап/drag) =============== */
+const boardEl = UI.board;
 function boardXY(evt){
-  const r=UI.board.getBoundingClientRect();
-  const x = Math.floor(( (evt.touches? evt.touches[0].clientX:evt.clientX) - r.left ) / r.width * SIZE);
-  const y = Math.floor(( (evt.touches? evt.touches[0].clientY:evt.clientY) - r.top ) / r.height * SIZE);
+  const r=boardEl.getBoundingClientRect();
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  const x = Math.floor((clientX - r.left) / r.width * SIZE);
+  const y = Math.floor((clientY - r.top) / r.height * SIZE);
   return [Math.max(0,Math.min(SIZE-1,x)), Math.max(0,Math.min(SIZE-1,y))];
 }
-UI.board.addEventListener('pointerdown', e=>{
+function onPointerDown(e){
   if(State.lock||State.gameOver) return;
   const [x,y]=boardXY(e);
   const p=State.board[y][x]; if(!p) return;
@@ -433,8 +441,8 @@ UI.board.addEventListener('pointerdown', e=>{
   State.hover=[x,y];
   State.selectable=[[x,y]];
   draw();
-});
-UI.board.addEventListener('pointermove', e=>{
+}
+function onPointerMove(e){
   if(State.dragging){
     const [x,y]=boardXY(e);
     State.dragging.fx=x; State.dragging.fy=y;
@@ -442,8 +450,8 @@ UI.board.addEventListener('pointermove', e=>{
   }else{
     const [x,y]=boardXY(e); State.hover=[x,y]; draw();
   }
-});
-UI.board.addEventListener('pointerup', e=>{
+}
+function onPointerUp(e){
   if(!State.dragging) return;
   const [x,y]=boardXY(e);
   const cand = State.dragging.moves.find(m=>m.to.x===x && m.to.y===y);
@@ -455,7 +463,10 @@ UI.board.addEventListener('pointerup', e=>{
     }
   }
   State.dragging=null; State.hover=null; draw();
-});
+}
+['pointerdown','mousedown','touchstart'].forEach(t=>boardEl.addEventListener(t,onPointerDown,{passive:false}));
+['pointermove','mousemove','touchmove'].forEach(t=>boardEl.addEventListener(t,onPointerMove,{passive:false}));
+['pointerup','mouseup','touchend','touchcancel'].forEach(t=>boardEl.addEventListener(t,onPointerUp,{passive:false}));
 
 /* =============== Игра/ИИ/Кнопки =============== */
 function syncUI(){

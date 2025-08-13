@@ -14,3 +14,9 @@
 WebSocket clients may optionally send an `auth` message containing Telegram `initData`.
 Verified users receive their Telegram profile; otherwise the server assigns an
 anonymous identity. Matchmaking works for both verified and anonymous players.
+
+## Telegram Mini App — жесты
+- В `styles.css` глобально отключаются прокрутка и pull-to-refresh: `overflow: hidden`, `overscroll-behavior: none`, фиксированный контейнер `#app`.
+- Игровая область помечена как `touch-action: none`, чтобы браузер не перехватывал pan/zoom.
+- Обработчики `pointer`/`touch` событий добавлены с опцией `{ passive:false }` и вызывают `preventDefault()` в `gestures-guard.js`.
+- При старте мини-апа выполняется `Telegram.WebApp.expand()` и задаётся фон через `setBackgroundColor`.
