@@ -49,24 +49,23 @@ html, body{
 .view{ inline-size:100%; block-size:100%; }
 .view[hidden]{ display:none !important; }
 
-/* Контейнер центрирования: flex-центр по обеим осям */
+/* Центрирование всего стека (доска + подпись) */
 .game-center{
-  inline-size: 100%;
-  block-size: 100%;
-  display:flex;
-  align-items:center;       /* вертикальное центрирование */
-  justify-content:center;   /* горизонтальное */
-  position:relative;
-  overflow:visible;
+  inline-size:100%;
+  block-size:100%;
+  display:grid;
+  grid-template-rows:auto auto;
+  justify-items:center;
+  align-content:center;
+  row-gap:12px;
 }
 
-/* Обёртка и доска: размер задаёт JS, aspect 1/1 */
+/* Обёртка доски: размер задаёт JS */
 .board-wrap{
   position:relative;
-  display:block;
   aspect-ratio:1/1;
-  max-inline-size: 100%;
-  max-block-size: 100%;
+  max-inline-size:100%;
+  max-block-size:100%;
 }
 .board{
   position:absolute; inset:0;
@@ -75,16 +74,16 @@ html, body{
 }
 .board canvas{ inline-size:100%; block-size:100%; display:block; }
 
-/* Сайд-панель не влияет на центрирование */
-.side-panel{
-  position:absolute; top:0; right:0;
-  background:rgba(255,255,255,.03);
+/* Подпись под доской — читабельная, не обрезается */
+.board-caption{
+  padding:10px 12px;
+  background:rgba(255,255,255,.06);
   border-radius:12px;
-  padding:12px;
+  max-inline-size: min(92vw, 520px);
+  color:var(--text);
 }
-.stat{ color:var(--text); font-size:14px; margin:6px 0; }
-.stat span{ opacity:.7; }
-.stat b{ font-weight:600; }
+.board-caption .stat{ line-height:1.2; margin:2px 0; opacity:.9; }
+.board-caption .stat b{ opacity:1; }
 
 /* Низ: одна строка, не перекрывает сцену */
 .footer{ min-height:60px; }
