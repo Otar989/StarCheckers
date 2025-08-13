@@ -9,80 +9,87 @@
 <link rel="stylesheet" href="./styles.css?v=1">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="./src/tg-viewport.js"></script>
+<script src="./src/gestures-guard.js"></script>
 </head>
 <body>
 <div id="app" class="app-root">
-  <header class="header">
-    <div class="title">Русские шашки</div>
-    <button id="btn-settings" class="btn-ghost">Настройки</button>
-    <button id="btn-back" class="btn-ghost" hidden>Назад</button>
+  <header class="appbar">
+    <div class="appbar-left">
+      <span class="logo">Русские шашки</span>
+    </div>
+    <div class="appbar-right">
+      <button id="btn-settings" class="btn-ghost">Настройки</button>
+      <button id="btn-back" class="btn-ghost" hidden>Назад</button>
+    </div>
   </header>
 
   <main class="content">
+    <!-- Экран игры -->
     <section id="view-game" class="view">
-      <div class="game">
-        <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
-        <aside class="side-panel">
-          <div class="meta">
-            <div>Ход: <b id="turnLabel">—</b></div>
-            <div>Статус: <b id="statusLabel">—</b></div>
-          </div>
-        </aside>
+      <div class="card game-card">
+        <div class="card-head">
+          <h2>Игра</h2>
+        </div>
+        <div class="card-body game-grid">
+          <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
+          <aside class="side-panel">
+            <div class="stat"><span>Ход:</span> <b id="turn">—</b></div>
+            <div class="stat"><span>Статус:</span> <b id="status">—</b></div>
+          </aside>
+        </div>
       </div>
     </section>
 
+    <!-- Экран настроек -->
     <section id="view-settings" class="view" hidden>
-      <form class="settings-form">
-        <fieldset>
-          <legend>Игра</legend>
-          <label>Режим
-            <select id="mode" class="select">
+      <div class="card">
+        <div class="card-head"><h2>Настройки</h2></div>
+        <div class="card-body settings-body">
+          <div class="form-row">
+            <label>Режим</label>
+            <select name="mode">
               <option value="ai">1 игрок (с ИИ)</option>
-              <option value="pvp">2 игрока</option>
+              <option value="pvp-local">2 игрока (локально)</option>
             </select>
-          </label>
-          <label>Уровень ИИ
-            <select id="level" class="select">
-              <option value="0">0 (быстрый)</option>
-              <option value="1" selected>1 (средний)</option>
+          </div>
+          <div class="form-row">
+            <label>Уровень ИИ</label>
+            <select name="aiLevel">
+              <option value="1">1 (средний)</option>
               <option value="2">2 (сложный)</option>
+              <option value="0">0 (лёгкий)</option>
             </select>
-          </label>
-          <label><input id="mustCapture" type="checkbox" checked> Бить обязательно</label>
-          <label>Цвет игрока
-            <select id="yourColor" class="select">
-              <option value="white" selected>Белые (начинают)</option>
+          </div>
+          <div class="form-row">
+            <label class="checkbox"><input type="checkbox" name="mustCapture" checked> Бить обязательно</label>
+          </div>
+          <div class="form-row">
+            <label>Цвет игрока</label>
+            <select name="playerColor">
+              <option value="white">Белые (начинают)</option>
               <option value="black">Чёрные</option>
             </select>
-          </label>
-        </fieldset>
-        <fieldset>
-          <legend>Оформление</legend>
-          <label>Тема
-            <select id="themeSelect" name="theme">
-              <option value="classic">Classic</option>
-              <option value="walnut">Walnut</option>
-              <option value="graphite">Graphite</option>
-            </select>
-          </label>
-          <label><input id="sfxOn" type="checkbox" name="sfx" checked> Звуки ходов</label>
-          <label><input id="musicOn" type="checkbox" name="music"> Музыка</label>
-        </fieldset>
-        <button type="button" id="btn-newgame" class="btn-primary">Новая игра</button>
-      </form>
+          </div>
+          <div class="form-row split">
+            <label class="checkbox"><input type="checkbox" name="sfx" checked> Звуки ходов</label>
+            <label class="checkbox"><input type="checkbox" name="music"> Музыка</label>
+          </div>
+          <div class="actions">
+            <button id="btn-newgame" type="button" class="btn-primary">Новая игра</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="controls">
-      <button id="btnUndo" data-action="undo" class="btn">Отменить</button>
-      <button id="btnHint" data-action="hint" class="btn">Подсказка</button>
-      <button id="btnRestart" data-action="new"  class="btn btn-primary">Сдаться / Новая</button>
+      <button data-action="undo" class="btn">Отменить</button>
+      <button data-action="hint" class="btn">Подсказка</button>
+      <button data-action="new"  class="btn btn-primary">Сдаться / Новая</button>
     </div>
   </footer>
-</div>
-
-<script src="./src/gestures-guard.js"></script>
+<script src="./src/board-layout.js"></script>
 <script type="module" src="./index.js"></script>
 <script type="module">
   import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';
@@ -106,16 +113,18 @@
   const DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
 
   const UI = {
-    board:document.getElementById('board'),
-    turn:document.getElementById('turnLabel'),
-    status:document.getElementById('statusLabel'),
-    start:document.getElementById('btn-newgame'),
-    mustCap:document.getElementById('mustCapture'),
-    level:document.getElementById('level'),
-    mode:document.getElementById('mode'),
-    yourColor:document.getElementById('yourColor'),
-    sfxOn:document.getElementById('sfxOn'),
-    undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
+    board: document.getElementById('board'),
+    turn: document.getElementById('turn'),
+    status: document.getElementById('status'),
+    start: document.getElementById('btn-newgame'),
+    mustCap: document.querySelector('input[name="mustCapture"]'),
+    level: document.querySelector('select[name="aiLevel"]'),
+    mode: document.querySelector('select[name="mode"]'),
+    yourColor: document.querySelector('select[name="playerColor"]'),
+    sfxOn: document.querySelector('input[name="sfx"]'),
+    undo: document.querySelector('button[data-action="undo"]'),
+    hint: document.querySelector('button[data-action="hint"]'),
+    restart: document.querySelector('button[data-action="new"]'),
   };
 
   const State = {
@@ -161,7 +170,6 @@
   }
 
   UI.sfxOn.addEventListener('change', saveSettings);
-  window.addEventListener('theme-change', ()=>{ updateThemeColors(); draw(); });
 
   function draw(){
     const b=State.board || Array.from({length:SIZE},()=>Array(SIZE).fill(null));
@@ -466,6 +474,5 @@
 
   (function boot(){ draw(); showSettings(); })();
 </script>
-<script src="./src/board-layout.js"></script>
 </body>
 </html>
