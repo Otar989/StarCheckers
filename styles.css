@@ -24,13 +24,14 @@ html, body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
 }
 
-#app.app-root{
-  position:fixed; inset:0; display:grid; gap:12px;
-  grid-template-rows:auto 1fr auto;
-  padding: calc(env(safe-area-inset-top,0px) + 8px)
-           calc(env(safe-area-inset-right,0px) + 12px)
-           calc(env(safe-area-inset-bottom,0px) + 12px)
-           calc(env(safe-area-inset-left,0px) + 12px);
+/* Контейнер приложения */
+#app, .content, .game-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* AppBar */
@@ -39,9 +40,6 @@ html, body{
 .btn-ghost{ background:rgba(255,255,255,.06); border:0; color:var(--text); padding:8px 12px; border-radius:12px; }
 
 /* Контентный экран */
-.content{
-  min-height:0;
-}
 .view{ width:100%; height:100%; }
 .view[hidden]{ display:none !important; }
 
@@ -55,45 +53,32 @@ html, body{
 .card-head h2{ margin:0; font-size:16px; }
 .card-body{ padding:12px; min-height:0; }
 
-/* Карточка игры занимает всю высоту доступной зоны */
-.game-card{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  min-height:0;
+/* Зона с доской */
+.game-grid {
+  flex: 1;
+  display: flex;
+  align-items: center;      /* центр по вертикали */
+  justify-content: center;  /* центр по горизонтали */
+  min-height: 0;
+  min-width: 0;
 }
 
-/* Основная зона игры: грид, который ЦЕНТРИРУЕТ содержимое */
-.game-grid{
-  display:grid;
-  /* 1) два ряда: доска и справа/снизу панель статуса (авто) */
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-  gap:12px;
-  min-height:0;
-
-  /* 2) ключ: центрирование по обеим осям */
-  place-items:center;        /* центр по горизонтали */
-  place-content:center;      /* центр по вертикали */
+/* Обёртка доски */
+.board-wrap {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 100vmin; /* ограничение — вписывается в меньшую сторону экрана */
+  max-height: 100vmin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* На планшете справа может быть панель — центрирование сохраняем */
-@media (min-width:820px) and (orientation:landscape){
-  .game-grid{
-    grid-template-columns: minmax(0,1fr) 320px;
-    grid-template-rows: auto;
-    place-items:center;
-    place-content:center;    /* важно не убирать */
-  }
+/* Сама доска */
+.board {
+  width: 100%;
+  height: 100%;
 }
-
-/* Обёртка и доска: размеры проставляет JS, позиционирование абсолютом */
-.board-wrap{
-  position:relative;
-  width:100%; height:100%;
-  max-width:100%; max-height:100%;
-}
-.board{ position:absolute; inset:0; aspect-ratio:1/1; }
 .board canvas{ width:100%; height:100%; display:block; }
 
 /* Клетки/фигуры — ваши существующие стили + обновлённые цвета */
