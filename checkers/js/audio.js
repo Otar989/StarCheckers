@@ -1,6 +1,6 @@
 let ctx=null;
 let unlocked=false;
-let gains={music:1,sfx:1};
+let gains={sfx:1};
 
 /** Initialize audio context. */
 export function initAudio(){
