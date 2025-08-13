@@ -1,105 +1,113 @@
+/* ----- Тема Graphite (единственная) ----- */
 :root{
-  --vh: 1dvh; /* будет переопределено из JS */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
+  --bg:#0b0f15;
+  --surface:#11161d;        /* фон карт */
+  --surface-2:#0f141a;      /* фон вторичный/панели */
+  --text:#e6ebf2;
+  --muted:#a6b0be;
+  --accent:#9ac6ff;         /* голубой акцент */
+  --btn:#3a4352;
+  --btn-hover:#465063;
+  --radius:16px;
+  --shadow:0 12px 40px rgba(0,0,0,.35);
 
-  /* Тема по умолчанию (classic) */
-  --bg: #0f172a;
-  --panel: #111827;
-  --text: #e5e7eb;
-  --board-light:#d6b07b; --board-dark:#6b4a32;
-  --piece-light:#fff6e8; --piece-dark:#8b1e1e;
-  --accent:#ffd166;
+  /* Доска */
+  --board-light:#2b3038;
+  --board-dark:#1a1f26;
+  --piece-light:#e8ecf3;
+  --piece-dark:#cf3a3a;
 }
 
-html, body{ height:100%; overflow:hidden; overscroll-behavior:none; background:var(--bg); color:var(--text); }
+html, body{
+  height:100%; overflow:hidden; overscroll-behavior:none;
+  background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
+}
 
 #app.app-root{
-  position:fixed; inset:0;
-  display:grid; gap:8px;
-  grid-template-rows:auto 1fr auto; /* header / content / footer */
-  padding: calc(var(--safe-top) + 6px) calc(var(--safe-right) + 10px)
-           calc(var(--safe-bottom) + 10px) calc(var(--safe-left) + 10px);
+  position:fixed; inset:0; display:grid; gap:12px;
+  grid-template-rows:auto 1fr auto;
+  padding: calc(env(safe-area-inset-top,0px) + 8px)
+           calc(env(safe-area-inset-right,0px) + 12px)
+           calc(env(safe-area-inset-bottom,0px) + 12px)
+           calc(env(safe-area-inset-left,0px) + 12px);
 }
 
-.header{ display:flex; align-items:center; gap:8px; }
-.header .title{ font-weight:700; }
-.btn-ghost{ background:rgba(255,255,255,0.08); border:0; border-radius:12px; padding:8px 12px; color:var(--text); }
+/* AppBar */
+.appbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.logo{ font-weight:800; letter-spacing:.2px; }
+.btn-ghost{ background:rgba(255,255,255,.06); border:0; color:var(--text); padding:8px 12px; border-radius:12px; }
 
+/* Контент */
 .content{ min-height:0; }
 .view{ width:100%; height:100%; }
 .view[hidden]{ display:none !important; }
 
-.game{
-  min-height:0;
-  display:grid;
-  place-items:center;
-  grid-template-columns: 1fr;
+/* Карточки */
+.card{
+  background:linear-gradient(180deg, var(--surface), var(--surface-2));
+  border-radius:var(--radius); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; min-height:0;
+}
+.card-head{ padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.06); }
+.card-head h2{ margin:0; font-size:16px; }
+.card-body{ padding:12px; min-height:0; }
+
+/* Игра: сетка */
+.game-card{ height:100%; }
+.game-grid{
+  display:grid; gap:12px; min-height:0;
+  grid-template-columns:1fr;
   grid-auto-rows:minmax(0,1fr);
-  gap:12px;
+  place-items:center;
+}
+@media (min-width:820px) and (orientation:landscape){
+  .game-grid{ grid-template-columns:minmax(0,1fr) 320px; align-items:center; }
 }
 
+/* Доска */
 .board-wrap{
-  position:relative;
-  width:100%;
-  height:100%;
-  max-width:100%;
-  max-height:100%;
+  position:relative; width:100%; height:100%;
+  max-width:100%; max-height:100%;
 }
 .board{ position:absolute; inset:0; aspect-ratio:1/1; }
-.board canvas{width:100%;height:100%;display:block;}
+.board canvas{ width:100%; height:100%; display:block; }
 
-.side-panel{ width:100%; }
+/* Клетки/фигуры — ваши существующие стили + обновлённые цвета */
+.board .cell.light{ background:var(--board-light); }
+.board .cell.dark{  background:var(--board-dark); }
+.piece.light{ background:radial-gradient(ellipse at 35% 30%, #fff, var(--piece-light)); }
+.piece.dark{  background:radial-gradient(ellipse at 35% 30%, #b00000, var(--piece-dark)); }
 
-.footer{ min-height:56px; }
+/* Панель справа */
+.side-panel{
+  width:100%; background:rgba(255,255,255,.03);
+  border-radius:12px; padding:12px;
+}
+.stat{ color:var(--muted); margin:6px 0; }
+.stat b{ color:var(--text); }
+
+/* Настройки */
+.settings-body{ display:grid; gap:12px; max-height:100%; overflow:auto; }
+.form-row{ display:grid; gap:6px; }
+.form-row.split{ grid-auto-flow:column; grid-auto-columns:1fr; gap:12px; }
+label{ font-size:13px; color:var(--muted); }
+select, input[type="text"]{
+  width:100%; background:#151b24; color:var(--text);
+  border:1px solid rgba(255,255,255,.08); border-radius:12px;
+  padding:10px 12px; outline:none;
+}
+select:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(154,198,255,.2); }
+.checkbox{ display:flex; align-items:center; gap:8px; }
+
+.actions{ display:flex; justify-content:flex-start; }
+.btn{ background:var(--btn); color:#fff; border:0; padding:10px 14px; border-radius:14px; }
+.btn:hover{ background:var(--btn-hover); }
+.btn-primary{ background:var(--accent); color:#10151b; }
+
+/* Футер */
+.footer{ min-height:60px; }
 .controls{ display:grid; grid-auto-flow:column; gap:8px; }
-.btn{ border:0; border-radius:14px; padding:10px 14px; background:#3a4352; color:#fff; }
-.btn-primary{ background: var(--accent); color:#2b2b2b; }
 
-.settings-form{
-  min-height:0;
-  overflow:auto;
-  background:var(--panel);
-  border-radius:16px;
-  padding:16px;
-}
-.settings-form fieldset{ border:0; margin:0 0 16px; }
-.settings-form legend{ font-weight:700; margin-bottom:8px; }
-
-/* Жесты управляем сами */
+/* Жесты только наши */
 .board, .board *{ touch-action:none; }
-
-/* Планшет/десктоп: игра + панель/настройки рядом */
-@media (min-width:820px) and (orientation:landscape){
-  .game{ grid-template-columns:minmax(0,1fr) 320px; align-items:center; }
-  .settings-form{ height:100%; }
-}
-
-/* Classic (уже задан переменными по умолчанию) */
-body.theme-classic{}
-
-/* Новый Walnut — тёплая палитра, контрастнее и светлее доска */
-body.theme-walnut{
-  --bg:#0e0f12;
-  --panel:#151820;
-  --text:#f1f5f9;
-  --board-light:#c9a66b;    /* светлое тёплое дерево */
-  --board-dark:#5a3a1c;     /* тёмный орех */
-  --piece-light:#f5efe3;    /* слоновая кость */
-  --piece-dark:#7d2a1f;     /* терракотовый красный */
-  --accent:#ffc857;         /* янтарная кнопка */
-}
-
-/* Graphite — тёмная индустриальная тема */
-body.theme-graphite{
-  --bg:#0b0d12;
-  --panel:#0f1115;
-  --text:#e4e6eb;
-  --board-light:#2b2f36;
-  --board-dark:#1a1d23;
-  --piece-light:#e7e7e7;
-  --piece-dark:#b13232;
-  --accent:#9ac6ff;
-}

@@ -6,13 +6,10 @@ tg?.disableVerticalSwipe?.();
 // WS URL
 const WS_URL = (location.origin.replace('http','ws')) + '/ws';
 
-// ==== Тема и настройки ====
+// ==== Настройки ====
 const root = document.documentElement;
 const settings = JSON.parse(localStorage.getItem('sc_settings')||'{}');
-function applyTheme(t){ t==='light' ? root.classList.add('light') : root.classList.remove('light'); }
-applyTheme(settings.theme || (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
 function saveSettings(){ localStorage.setItem('sc_settings', JSON.stringify({
-  theme: root.classList.contains('light')?'light':'dark',
   level: ui.level.value,
   sfx: ui.sfx.checked,
   hints: ui.hints.checked
@@ -41,7 +38,6 @@ const ui={
   find: $('#find'), leave: $('#leave'),
   sfx: $('#sfx'), hints: $('#hints'),
   hintOnce: $('#hintOnce'), newBtn: $('#new'), undo: $('#undo'),
-  theme: $('#theme'),
   turn: $('#turn'), score: $('#score'), status: $('#status'),
   moves: $('#moves'), roomId: $('#roomId'), myColor: $('#myColor'),
   joinById: $('#joinById'), roomInput: $('#roomInput')
@@ -203,7 +199,6 @@ ui.hints.addEventListener('change',e=>{ state.hints=!!e.target.checked; saveSett
 ui.hintOnce.addEventListener('click',()=>{ showBestMoveHint(); });
 ui.newBtn.addEventListener('click',()=>{ initBoard(); state.turn=W; state.history=[]; state.record=[]; state.curPly=-1; state.selected=null; state.legal=[]; updateUI(); });
 ui.undo.addEventListener('click',()=> undoMove());
-ui.theme.addEventListener('click',()=>{ root.classList.toggle('light'); refreshColors(); saveSettings(); draw(); });
 
 // ==== Старт ====
 initBoard(); updateUI(); fitCanvas();
