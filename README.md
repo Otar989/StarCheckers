@@ -1,29 +1,35 @@
-# StarCheckers — Telegram Mini App
+# StarCheckers
 
-## Темы
-Доступны три темы: **Classic**, **Walnut** и **Graphite**. Выбранная тема сохраняется в `localStorage` и применяется при следующем запуске.
+Новая версия игры «Русские шашки» на React + TypeScript.
 
-## Звук
-Используется WebAudio API. Звуки ходов могут быть включены или отключены в настройках.
+## Development
+```bash
+npm install
+npm run dev
+```
 
-## Деплой
-Статические файлы подключаются с параметром версии `?v=<timestamp>` для предотвращения кэширования. При деплое обновляйте параметр в ссылках и выполняйте принудительный "Deploy latest commit".
+## Tests
+```bash
+npm test
+```
 
-## Authentication
+## Mock WebSocket server
+```bash
+npm run mock:ws
+```
+Сервер поднимается на `ws://localhost:8080` и просто эхо-отправляет сообщения.
 
-WebSocket clients may optionally send an `auth` message containing Telegram `initData`.
-Verified users receive their Telegram profile; otherwise the server assigns an
-anonymous identity. Matchmaking works for both verified and anonymous players.
+## Build PWA
+```bash
+npm run build
+npm run preview
+```
 
-## Telegram Mini App — жесты
-- В `styles.css` глобально отключаются прокрутка и pull-to-refresh: `overflow: hidden`, `overscroll-behavior: none`, фиксированный контейнер `#app`.
-- Игровая область помечена как `touch-action: none`, чтобы браузер не перехватывал pan/zoom.
-- Обработчики `pointer`/`touch` событий добавлены с опцией `{ passive:false }` и вызывают `preventDefault()` в `gestures-guard.js`.
-- При старте мини-апа выполняется `Telegram.WebApp.expand()` и задаётся фон через `setBackgroundColor`.
+## Telegram Mini App
+Подключаемые скрипты (в этом порядке):
+1. `tg-viewport.ts`
+2. `tg-header-buffer.ts`
+3. `layout-engine.ts`
+4. `gestures-guard.ts`
 
-## Адаптация в Telegram WebApp
-- В `<head>` подключён метатег `viewport-fit=cover` и используются CSS-переменные `env(safe-area-inset-*)` для учёта вырезов экрана.
-- Переменная `--vh` рассчитывается через `Telegram.WebApp.viewportStableHeight`, а корневой контейнер `#app` получает фиксированную высоту в пикселях.
-- `ResizeObserver` вычисляет точный квадрат доски внутри `.board-wrap` без прокрутки страницы.
-- Скрипты подключаются в порядке: `tg-viewport.js`, инициализация UI, затем `board-layout.js`.
-- Разметка построена сеткой `header / main / footer`, что упрощает адаптивное размещение элементов.
+Эти модули уже импортированы в `src/main.tsx`.
