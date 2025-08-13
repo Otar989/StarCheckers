@@ -1,5 +1,7 @@
 // Telegram
 const tg = window.Telegram?.WebApp; tg?.expand(); tg?.ready();
+// Prevent closing the mini app when swiping vertically
+tg?.disableVerticalSwipe?.();
 
 // WS URL
 const WS_URL = (location.origin.replace('http','ws')) + '/ws';
