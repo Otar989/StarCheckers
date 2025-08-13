@@ -38,11 +38,19 @@
   <header class="header">
     <div class="brand">Русские шашки</div>
     <div style="flex:1"></div>
-    <button id="toMenu" class="btn secondary hidden">Настройки</button>
+    <button id="btnSettings" class="btn secondary hidden">Настройки</button>
   </header>
 
-  <main class="main">
-    <div id="screenMenu" class="screens">
+  <main class="content">
+    <section class="game">
+      <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
+      <div class="meta">
+        <div>Ход: <b id="turnLabel">—</b></div>
+        <div>Статус: <b id="statusLabel">—</b></div>
+      </div>
+    </section>
+
+    <section class="settings" hidden>
       <div class="row">
         <div class="col">
           <h3>Игра</h3>
@@ -81,21 +89,7 @@
           <button id="startGame" class="btn">Новая игра</button>
         </div>
       </div>
-    </div>
-
-    <div id="screenGame" class="screens hidden">
-      <div class="board-wrap">
-        <div class="board">
-          <canvas id="board" width="1024" height="1024"></canvas>
-        </div>
-      </div>
-      <aside class="side-panel">
-        <div class="meta">
-          <div>Ход: <b id="turnLabel">—</b></div>
-          <div>Статус: <b id="statusLabel">—</b></div>
-        </div>
-      </aside>
-    </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -103,7 +97,6 @@
       <button id="btnUndo" class="btn secondary">Отменить</button>
       <button id="btnHint" class="btn secondary">Подсказка</button>
       <button id="btnRestart" class="btn">Сдаться / Новая</button>
-      <label class="switch"><input id="toggleSfx" type="checkbox" checked/> Звуки</label>
     </div>
   </footer>
 </div>
@@ -137,9 +130,9 @@ const DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
 
 /* =============== Инициализация =============== */
 const UI = {
-  menu:document.getElementById('screenMenu'),
-  game:document.getElementById('screenGame'),
-  toMenu:document.getElementById('toMenu'),
+  settings:document.querySelector('.settings'),
+  game:document.querySelector('.game'),
+  settingsBtn:document.getElementById('btnSettings'),
   board:document.getElementById('board'),
   turn:document.getElementById('turnLabel'),
   status:document.getElementById('statusLabel'),
@@ -150,7 +143,6 @@ const UI = {
   yourColor:document.getElementById('yourColor'),
   sfxOn:document.getElementById('sfxOn'),
   theme:document.getElementById('themeSelect'),
-  tSfx:document.getElementById('toggleSfx'),
   undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
   // элементы для панели тестов удалены
 };
@@ -192,7 +184,6 @@ UI.sfxOn.checked = savedSettings.sfx ?? true;
 UI.theme.value = savedSettings.theme || 'classic';
 document.body.classList.add('theme-'+UI.theme.value);
 updateThemeColors();
-UI.tSfx.checked = UI.sfxOn.checked;
 
 function saveSettings(){
   localStorage.setItem('settings', JSON.stringify({
@@ -201,7 +192,7 @@ function saveSettings(){
   }));
 }
 
-UI.sfxOn.addEventListener('change', ()=>{ UI.tSfx.checked = UI.sfxOn.checked; saveSettings(); });
+UI.sfxOn.addEventListener('change', saveSettings);
 UI.theme.addEventListener('change', ()=>{
   document.body.classList.remove('theme-classic','theme-walnut','theme-graphite');
   document.body.classList.add('theme-'+UI.theme.value);
@@ -347,7 +338,7 @@ function playMove(state, move, {silent=false}={}){
     history:[...state.history, {move, board:state.board}],
   };
   if(!silent){
-    if(window.AudioAPI && (UI.sfxOn.checked && UI.tSfx.checked)) window.AudioAPI.playMove();
+    if(window.AudioAPI && UI.sfxOn.checked) window.AudioAPI.playMove();
   }
   const must = state.mustCapture && captures.length>0;
   if(must){
@@ -368,7 +359,7 @@ function playMove(state, move, {silent=false}={}){
     State.status = (next.turn===LIGHT? "Белые":"Чёрные")+" без ходов. Победа!";
     if(window.AudioAPI){
       const result = (State.humanColor === next.turn)? 'lose':'win';
-      window.AudioAPI.showEndModal({result, onNew:newGameFromMenu, onSettings:()=>toScreen('menu')});
+      window.AudioAPI.showEndModal({result, onNew:newGameFromMenu, onSettings:showSettings});
     }
   }else{
     State.status = "Идёт игра";
@@ -486,15 +477,21 @@ function newGameFromMenu(){
   State.humanColor = UI.yourColor.value==="white"? LIGHT: DARK;
   State.aiDepth = parseInt(UI.level.value,10);
   State.selectable=[]; State.movesCache=null; State.dragging=null; State.hover=null;
-  UI.tSfx.checked = UI.sfxOn.checked;
   if(State.mode==="ai" && State.humanColor!==State.turn){ setTimeout(thinkAI, 200); }
-  toScreen('game'); syncUI();
+  showGame();
+  syncUI();
 }
-function toScreen(which){
-  const toGame = which==='game';
-  UI.menu.classList.toggle('hidden', toGame);
-  UI.game.classList.toggle('hidden', !toGame);
-  UI.toMenu.classList.toggle('hidden', !toGame);
+function showGame(){
+  UI.game.hidden=false;
+  UI.settings.hidden=true;
+  UI.settingsBtn.classList.remove('hidden');
+  if(window.sizeBoard) sizeBoard();
+}
+function showSettings(){
+  UI.game.hidden=true;
+  UI.settings.hidden=false;
+  UI.settingsBtn.classList.add('hidden');
+  if(window.sizeBoard) sizeBoard();
 }
 UI.undo.addEventListener('click', ()=>{
   if(!State.history.length) return;
@@ -512,11 +509,10 @@ UI.hint.addEventListener('click', ()=>{
   State.status="Подсказка: выделен лучший ход";
   draw();
 });
-UI.restart.addEventListener('click', ()=>{ toScreen('menu'); });
-UI.tSfx.addEventListener('change', e=>{ UI.sfxOn.checked = e.target.checked; saveSettings(); });
+UI.restart.addEventListener('click', showSettings);
 UI.start.addEventListener('click', newGameFromMenu);
-UI.toMenu.addEventListener('click', ()=>toScreen('menu'));
-(function boot(){ draw(); })();
+UI.settingsBtn.addEventListener('click', showSettings);
+(function boot(){ draw(); showSettings(); })();
 
 </script>
 <script src="./src/board-layout.js"></script>
