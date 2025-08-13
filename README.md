@@ -20,3 +20,9 @@ anonymous identity. Matchmaking works for both verified and anonymous players.
 - Игровая область помечена как `touch-action: none`, чтобы браузер не перехватывал pan/zoom.
 - Обработчики `pointer`/`touch` событий добавлены с опцией `{ passive:false }` и вызывают `preventDefault()` в `gestures-guard.js`.
 - При старте мини-апа выполняется `Telegram.WebApp.expand()` и задаётся фон через `setBackgroundColor`.
+
+## Адаптация в Telegram WebApp
+- Используются метатег `viewport-fit=cover` и CSS-переменные `env(safe-area-inset-*)` для учёта вырезов экрана.
+- Переменная `--vh` рассчитывается на основе `Telegram.WebApp.viewportStableHeight` и обновляется при изменении размеров.
+- `ResizeObserver` обеспечивает точный квадрат доски без обрезаний и прокрутки.
+- Разметка построена сеткой `header / main / footer`, что упрощает адаптивное размещение элементов.
