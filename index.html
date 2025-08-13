@@ -28,7 +28,7 @@
   .select, .input{
     width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.08); background:#333846; color:#e9edf6;
   }
-  canvas.board{display:block;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .board canvas{display:block;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
   .meta{margin-top:10px;font-size:14px;opacity:.9;display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .hidden{display:none}
 </style>
@@ -41,7 +41,7 @@
     <button id="toMenu" class="btn secondary hidden">Настройки</button>
   </header>
 
-  <section class="main">
+  <main class="main">
     <div id="screenMenu" class="screens">
       <div class="row">
         <div class="col">
@@ -85,7 +85,9 @@
 
     <div id="screenGame" class="screens hidden">
       <div class="board-wrap">
-        <canvas id="board" class="board" width="1024" height="1024"></canvas>
+        <div class="board">
+          <canvas id="board" width="1024" height="1024"></canvas>
+        </div>
       </div>
       <aside class="side-panel">
         <div class="meta">
@@ -94,7 +96,7 @@
         </div>
       </aside>
     </div>
-  </section>
+  </main>
 
   <footer class="footer">
     <div class="controls">
@@ -107,7 +109,6 @@
 </div>
 
 <script src="./src/gestures-guard.js"></script>
-<script src="./src/board-resize.js"></script>
 <script type="module">
   import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';
   import { showEndModal } from './src/modal.js?v=1';
@@ -518,5 +519,6 @@ UI.toMenu.addEventListener('click', ()=>toScreen('menu'));
 (function boot(){ draw(); })();
 
 </script>
+<script src="./src/board-layout.js"></script>
 </body>
 </html>

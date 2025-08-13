@@ -22,7 +22,8 @@ anonymous identity. Matchmaking works for both verified and anonymous players.
 - При старте мини-апа выполняется `Telegram.WebApp.expand()` и задаётся фон через `setBackgroundColor`.
 
 ## Адаптация в Telegram WebApp
-- Используются метатег `viewport-fit=cover` и CSS-переменные `env(safe-area-inset-*)` для учёта вырезов экрана.
-- Переменная `--vh` рассчитывается на основе `Telegram.WebApp.viewportStableHeight` и обновляется при изменении размеров.
-- `ResizeObserver` обеспечивает точный квадрат доски без обрезаний и прокрутки.
+- В `<head>` подключён метатег `viewport-fit=cover` и используются CSS-переменные `env(safe-area-inset-*)` для учёта вырезов экрана.
+- Переменная `--vh` рассчитывается через `Telegram.WebApp.viewportStableHeight`, а корневой контейнер `#app` получает фиксированную высоту в пикселях.
+- `ResizeObserver` вычисляет точный квадрат доски внутри `.board-wrap` без прокрутки страницы.
+- Скрипты подключаются в порядке: `tg-viewport.js`, инициализация UI, затем `board-layout.js`.
 - Разметка построена сеткой `header / main / footer`, что упрощает адаптивное размещение элементов.

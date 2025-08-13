@@ -1,22 +1,21 @@
 (function(){
   const setVH = () => {
-    // Если в Telegram доступна стабильная высота — используем её
     const tg = window.Telegram && Telegram.WebApp;
     const h = tg?.viewportStableHeight || tg?.viewportHeight || window.innerHeight;
-    // Переводим в "единицу vh" для CSS переменной
-    document.documentElement.style.setProperty('--vh', (h/100) + 'px');
+    // 1vh в пикселях
+    document.documentElement.style.setProperty('--vh', (h / 100) + 'px');
+    const app = document.getElementById('app');
+    if (app){
+      // Жёстко фиксируем высоту корня, чтобы ничего не "прыгало"
+      app.style.height = h + 'px';
+      app.style.maxHeight = h + 'px';
+    }
   };
   setVH();
-  // Telegram шлёт события изменения Viewport — подпишемся
-  if (window.Telegram && Telegram.WebApp) {
+  if (window.Telegram && Telegram.WebApp){
     try { Telegram.WebApp.onEvent('viewportChanged', setVH); } catch(e){}
     try { Telegram.WebApp.expand(); } catch(e){}
-    // Насыщаем тему (опционально, если используете TG тему)
-    try {
-      const theme = Telegram.WebApp.themeParams || {};
-      if (theme.bg_color) document.documentElement.style.setProperty('--bg', theme.bg_color);
-    } catch(e){}
   }
-  // На всякий случай — реагируем и на ресайзы браузера
   window.addEventListener('resize', setVH);
 })();
+

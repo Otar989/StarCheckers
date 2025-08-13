@@ -1,10 +1,11 @@
 :root{
-  --vh: 1dvh; /* переопределим из JS телеги */
+  --vh: 1dvh; /* будет переопределено из JS */
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
-  --bg:#0f172a; --panel:#111827; --text:#e5e7eb;
+  --bg:#0f172a;
+  --panel:#111827; --text:#e5e7eb;
   --board-light:#d6b07b; --board-dark:#6b4a32;
   --piece-light:#fff6e8; --piece-dark:#8b1e1e;
 }
@@ -25,39 +26,43 @@ html, body {
   overscroll-behavior: none;
   background: var(--bg, #0f172a);
 }
-#app, .app-root {
-  position: fixed;
-  inset: 0;
+#app.app-root{
+  position:fixed;
+  inset:0;
   padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 12px)
            calc(var(--safe-bottom) + 12px) calc(var(--safe-left) + 12px);
-  display: grid;
-  grid-template-rows: auto 1fr auto; /* header / content / footer */
-  gap: 8px;
+  display:grid;
+  grid-template-rows:auto 1fr auto; /* header / main / footer */
+  gap:8px;
+  height:100%; /* будет переписано инлайн через JS под стабильную высоту TG */
 }
 
 /* Центральная зона с доской и боковыми панелями */
-.main {
-  min-height: calc(100 * var(--vh));
-  display: grid;
-  grid-template-columns: 1fr;       /* мобильный вид — один столбец */
-  grid-template-rows: 1fr;
-  place-items: center;
+.main{
+  min-height:100%;
+  display:grid;
+  grid-template-columns:1fr;     /* мобильный — одна колонка */
+  grid-auto-rows:minmax(0,1fr);  /* важно: чтобы вложенные элементы могли ужиматься */
+  place-items:center;
+  gap:12px;
 }
 
 /* Вьюшка доски — квадратная, растягивается по минимуму из W/H */
-.board-wrap {
-  position: relative;
-  width: min(100%, 100vmin);
-  height: min(100%, 100vmin);
-  /* Пересчёт через inline-style из JS даст точный пиксельный квадрат */
+.board-wrap{
+  position:relative;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
 }
 
 /* Сама доска занимает 100% обёртки */
-.board {
-  position: absolute;
-  inset: 0;
-  aspect-ratio: 1 / 1;
+.board{
+  position:absolute;
+  inset:0;
+  aspect-ratio:1/1;
 }
+.board canvas{width:100%;height:100%;display:block;}
 
 /* Кнопки и панели — адаптивные от ширины экрана */
 .controls {
@@ -65,20 +70,17 @@ html, body {
   grid-auto-flow: column;
   gap: 8px;
 }
-.controls button { font-size: clamp(12px, 1.6vw, 16px); }
+.controls button{ font-size: clamp(12px, 1.6vw, 16px); }
 
 /* На планшете/десктопе — раскладка 2 колонки: доска + панель */
-@media (min-width: 820px) and (orientation: landscape) {
-  .main {
-    grid-template-columns: 1fr 320px;
-    align-items: center;
+@media (min-width:820px) and (orientation:landscape){
+  .main{
+    grid-template-columns:minmax(0,1fr) 320px; /* доска + панель */
+    align-items:center;
   }
-  .side-panel { height: 100%; overflow: auto; }
+  .side-panel{ height:100%; overflow:auto; }
 }
-.board, .board * {
-  touch-action: none;
-  -ms-touch-action: none;
-}
+.board, .board *{ touch-action:none; }
 body{ background:var(--bg); color:var(--text); }
 .board .cell.light{ background:var(--board-light); }
 .board .cell.dark{  background:var(--board-dark); }
@@ -94,7 +96,7 @@ body{ background:var(--bg); color:var(--text); }
 }
 .piece.selected{ box-shadow:0 0 0 4px rgba(80,180,255,0.9) inset; }
 
-.modal-root{position:fixed;inset:0;display:grid;place-items:center;z-index:1000}
+.modal-root{position:absolute;inset:0;display:grid;place-items:center;z-index:1000}
 .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
 .modal{position:relative;min-width:320px;max-width:92vw;padding:24px;border-radius:18px;
   background:linear-gradient(180deg, var(--panel), rgba(255,255,255,0.02));
