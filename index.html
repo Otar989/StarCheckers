@@ -23,64 +23,54 @@
     </div>
   </header>
 
-  <main class="content">
-    <!-- Экран игры -->
+  <section id="stage" class="stage">
     <section id="view-game" class="view">
-      <div class="card game-card">
-        <div class="card-head">
-          <h2>Игра</h2>
-        </div>
-        <div class="card-body game-grid">
-          <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
-          <aside class="side-panel">
-            <div class="stat"><span>Ход:</span> <b id="turn">—</b></div>
-            <div class="stat"><span>Статус:</span> <b id="status">—</b></div>
-          </aside>
-        </div>
+      <div class="game-center">
+        <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
+        <aside class="side-panel" aria-hidden="true">
+          <div class="stat"><span>Ход:</span> <b id="turn">—</b></div>
+          <div class="stat"><span>Статус:</span> <b id="status">—</b></div>
+        </aside>
       </div>
     </section>
 
-    <!-- Экран настроек -->
     <section id="view-settings" class="view" hidden>
-      <div class="card">
-        <div class="card-head"><h2>Настройки</h2></div>
-        <div class="card-body settings-body">
-          <div class="form-row">
-            <label>Режим</label>
-            <select name="mode">
-              <option value="ai">1 игрок (с ИИ)</option>
-              <option value="pvp-local">2 игрока (локально)</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label>Уровень ИИ</label>
-            <select name="aiLevel">
-              <option value="1">1 (средний)</option>
-              <option value="2">2 (сложный)</option>
-              <option value="0">0 (лёгкий)</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label class="checkbox"><input type="checkbox" name="mustCapture" checked> Бить обязательно</label>
-          </div>
-          <div class="form-row">
-            <label>Цвет игрока</label>
-            <select name="playerColor">
-              <option value="white">Белые (начинают)</option>
-              <option value="black">Чёрные</option>
-            </select>
-          </div>
-          <div class="form-row split">
-            <label class="checkbox"><input type="checkbox" name="sfx" checked> Звуки ходов</label>
-            <label class="checkbox"><input type="checkbox" name="music"> Музыка</label>
-          </div>
-          <div class="actions">
-            <button id="btn-newgame" type="button" class="btn-primary">Новая игра</button>
-          </div>
+      <div class="settings-body">
+        <div class="form-row">
+          <label>Режим</label>
+          <select name="mode">
+            <option value="ai">1 игрок (с ИИ)</option>
+            <option value="pvp-local">2 игрока (локально)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Уровень ИИ</label>
+          <select name="aiLevel">
+            <option value="1">1 (средний)</option>
+            <option value="2">2 (сложный)</option>
+            <option value="0">0 (лёгкий)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="checkbox"><input type="checkbox" name="mustCapture" checked> Бить обязательно</label>
+        </div>
+        <div class="form-row">
+          <label>Цвет игрока</label>
+          <select name="playerColor">
+            <option value="white">Белые (начинают)</option>
+            <option value="black">Чёрные</option>
+          </select>
+        </div>
+        <div class="form-row split">
+          <label class="checkbox"><input type="checkbox" name="sfx" checked> Звуки ходов</label>
+          <label class="checkbox"><input type="checkbox" name="music"> Музыка</label>
+        </div>
+        <div class="actions">
+          <button id="btn-newgame" type="button" class="btn btn-primary">Новая игра</button>
         </div>
       </div>
     </section>
-  </main>
+  </section>
 
   <footer class="footer">
     <div class="controls">
@@ -89,7 +79,7 @@
       <button data-action="new"  class="btn btn-primary">Сдаться / Новая</button>
     </div>
   </footer>
-<script src="./src/board-layout.js"></script>
+<script src="./src/board-center.js"></script>
 <script type="module" src="./index.js"></script>
 <script type="module">
   import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';

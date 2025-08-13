@@ -1,21 +1,18 @@
-/* ----- Тема Graphite (единственная) ----- */
 :root{
-  --bg:#0b0f15;
-  --surface:#11161d;        /* фон карт */
-  --surface-2:#0f141a;      /* фон вторичный/панели */
-  --text:#e6ebf2;
-  --muted:#a6b0be;
-  --accent:#9ac6ff;         /* голубой акцент */
-  --btn:#3a4352;
-  --btn-hover:#465063;
-  --radius:16px;
-  --shadow:0 12px 40px rgba(0,0,0,.35);
+  /* Тема Graphite — единственная */
+  --bg:#0b0f15; --text:#e6ebf2;
+  --surface:#11161d; --surface-2:#0f141a;
+  --board-light:#2b3038; --board-dark:#1a1f26;
+  --piece-light:#e8ecf3; --piece-dark:#cf3a3a;
+  --accent:#9ac6ff; --btn:#3a4352; --btn-hover:#465063;
+  --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.35);
 
-  /* Доска */
-  --board-light:#2b3038;
-  --board-dark:#1a1f26;
-  --piece-light:#e8ecf3;
-  --piece-dark:#cf3a3a;
+  /* Телеграм/браузер высота */
+  --vh: 1dvh;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 html, body{
@@ -24,85 +21,80 @@ html, body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
 }
 
-/* Контейнер приложения */
-#app, .content, .game-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
+/* Корень: фиксируем реальные границы и учитываем safe-area */
+#app.app-root{
+  position:fixed; inset:0;
+  display:grid; gap:12px;
+  grid-template-rows:auto 1fr auto; /* appbar / stage / footer */
+  padding: calc(var(--safe-top) + 8px)
+           calc(var(--safe-right) + 12px)
+           calc(var(--safe-bottom) + 12px)
+           calc(var(--safe-left) + 12px);
 }
 
-/* AppBar */
+/* Верхняя панель — без фиксированных высот */
 .appbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .logo{ font-weight:800; letter-spacing:.2px; }
 .btn-ghost{ background:rgba(255,255,255,.06); border:0; color:var(--text); padding:8px 12px; border-radius:12px; }
 
-/* Контентный экран */
-.view{ width:100%; height:100%; }
+/* Сцена (между appbar и footer) — это ЕДИНСТВЕННОЕ место, от которого считаем центр */
+.stage{
+  min-height:0;
+  block-size: 100%;
+  overflow: clip;           /* без скролла сцены */
+}
+.view{ inline-size:100%; block-size:100%; }
 .view[hidden]{ display:none !important; }
 
-/* Карточки */
-.card{
-  background:linear-gradient(180deg, var(--surface), var(--surface-2));
-  border-radius:var(--radius); box-shadow:var(--shadow);
-  display:flex; flex-direction:column; min-height:0;
-}
-.card-head{ padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.06); }
-.card-head h2{ margin:0; font-size:16px; }
-.card-body{ padding:12px; min-height:0; }
-
-/* Зона с доской */
-.game-grid {
-  flex: 1;
-  display: flex;
-  align-items: center;      /* центр по вертикали */
-  justify-content: center;  /* центр по горизонтали */
-  min-height: 0;
-  min-width: 0;
+/* Контейнер центрирования: flex-центр по обеим осям */
+.game-center{
+  inline-size: 100%;
+  block-size: 100%;
+  display:flex;
+  align-items:center;       /* вертикальное центрирование */
+  justify-content:center;   /* горизонтальное */
+  position:relative;
+  overflow:visible;
 }
 
-/* Обёртка доски */
-.board-wrap {
-  aspect-ratio: 1 / 1;
-  width: 100%;
-  max-width: 100vmin; /* ограничение — вписывается в меньшую сторону экрана */
-  max-height: 100vmin;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Обёртка и доска: размер задаёт JS, aspect 1/1 */
+.board-wrap{
+  position:relative;
+  display:block;
+  aspect-ratio:1/1;
+  max-inline-size: 100%;
+  max-block-size: 100%;
 }
-
-/* Сама доска */
-.board {
-  width: 100%;
-  height: 100%;
+.board{
+  position:absolute; inset:0;
+  inline-size:100%; block-size:100%;
+  aspect-ratio:1/1;
 }
-.board canvas{ width:100%; height:100%; display:block; }
+.board canvas{ inline-size:100%; block-size:100%; display:block; }
 
-/* Клетки/фигуры — ваши существующие стили + обновлённые цвета */
-.board .cell.light{ background:var(--board-light); }
-.board .cell.dark{  background:var(--board-dark); }
-.piece.light{ background:radial-gradient(ellipse at 35% 30%, #fff, var(--piece-light)); }
-.piece.dark{  background:radial-gradient(ellipse at 35% 30%, #b00000, var(--piece-dark)); }
-
-/* Панель статуса не должна «толкать» сетку вверх */
+/* Сайд-панель не влияет на центрирование */
 .side-panel{
-  width:100%;
-  justify-self:center;
+  position:absolute; top:0; right:0;
   background:rgba(255,255,255,.03);
   border-radius:12px;
   padding:12px;
 }
-.stat{ color:var(--muted); margin:6px 0; }
-.stat b{ color:var(--text); }
+.stat{ color:var(--text); font-size:14px; margin:6px 0; }
+.stat span{ opacity:.7; }
+.stat b{ font-weight:600; }
+
+/* Низ: одна строка, не перекрывает сцену */
+.footer{ min-height:60px; }
+.controls{ display:grid; grid-auto-flow:column; gap:8px; }
+.btn{ background:var(--btn); color:#fff; border:0; padding:10px 14px; border-radius:14px; }
+.btn:hover{ background:var(--btn-hover); }
+.btn-primary{ background:var(--accent); color:#10151b; }
 
 /* Настройки */
 .settings-body{ display:grid; gap:12px; max-height:100%; overflow:auto; }
 .form-row{ display:grid; gap:6px; }
 .form-row.split{ grid-auto-flow:column; grid-auto-columns:1fr; gap:12px; }
-label{ font-size:13px; color:var(--muted); }
+label{ font-size:13px; color:var(--text); opacity:.8; }
 select, input[type="text"]{
   width:100%; background:#151b24; color:var(--text);
   border:1px solid rgba(255,255,255,.08); border-radius:12px;
@@ -110,15 +102,18 @@ select, input[type="text"]{
 }
 select:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(154,198,255,.2); }
 .checkbox{ display:flex; align-items:center; gap:8px; }
-
 .actions{ display:flex; justify-content:flex-start; }
-.btn{ background:var(--btn); color:#fff; border:0; padding:10px 14px; border-radius:14px; }
-.btn:hover{ background:var(--btn-hover); }
-.btn-primary{ background:var(--accent); color:#10151b; }
 
-/* Футер */
-.footer{ min-height:60px; }
-.controls{ display:grid; grid-auto-flow:column; gap:8px; }
+/* Игровые цвета */
+.board .cell.light{ background:var(--board-light); }
+.board .cell.dark{  background:var(--board-dark); }
+.piece.light{ background:radial-gradient(ellipse at 35% 30%, #fff, var(--piece-light)); }
+.piece.dark{  background:radial-gradient(ellipse at 35% 30%, #b00000, var(--piece-dark)); }
 
 /* Жесты только наши */
 .board, .board *{ touch-action:none; }
+
+/* Планшет/десктоп: доска центрируется всё равно — без влияния сайд-панели */
+@media (min-width:820px) and (orientation:landscape){
+  .game-center{ padding-inline: 8px; }
+}
