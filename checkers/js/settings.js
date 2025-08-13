@@ -7,7 +7,6 @@ const defaults = {
   level: 2,
   color: 'w',
   force: true,
-  music: false,
   sfx: true
 };
 

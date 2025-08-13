@@ -34,21 +34,18 @@ function updateSettingsUI(){
   document.getElementById('opt-level').value=settings.level;
   document.getElementById('opt-color').value=settings.color;
   document.getElementById('opt-force').checked=settings.force;
-  document.getElementById('set-music').checked=settings.music;
   document.getElementById('set-sfx').checked=settings.sfx;
 }
 
 // save settings on change
-['opt-mode','opt-level','opt-color','opt-force','set-music','set-sfx'].forEach(id=>{
+['opt-mode','opt-level','opt-color','opt-force','set-sfx'].forEach(id=>{
   document.getElementById(id).addEventListener('change',()=>{
     settings.mode=+document.getElementById('opt-mode').value;
     settings.level=+document.getElementById('opt-level').value;
     settings.color=document.getElementById('opt-color').value;
     settings.force=document.getElementById('opt-force').checked;
-    settings.music=document.getElementById('set-music').checked;
     settings.sfx=document.getElementById('set-sfx').checked;
     setVolume('sfx',settings.sfx?1:0);
-    setVolume('music',settings.music?1:0);
     saveSettings(settings);
   });
 });

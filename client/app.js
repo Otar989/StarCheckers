@@ -12,7 +12,6 @@ applyTheme(settings.theme || (window.matchMedia('(prefers-color-scheme: light)')
 function saveSettings(){ localStorage.setItem('sc_settings', JSON.stringify({
   theme: root.classList.contains('light')?'light':'dark',
   level: ui.level.value,
-  music: ui.music.checked,
   sfx: ui.sfx.checked,
   hints: ui.hints.checked
 })); }
@@ -38,7 +37,7 @@ const ctx = cv.getContext('2d');
 const ui={
   mode: $('#mode'), level: $('#level'), stake: $('#stake'),
   find: $('#find'), leave: $('#leave'),
-  music: $('#music'), sfx: $('#sfx'), hints: $('#hints'),
+  sfx: $('#sfx'), hints: $('#hints'),
   hintOnce: $('#hintOnce'), newBtn: $('#new'), undo: $('#undo'),
   theme: $('#theme'),
   turn: $('#turn'), score: $('#score'), status: $('#status'),
@@ -47,36 +46,23 @@ const ui={
 };
 function $(s){return document.querySelector(s);}
 ui.level.value = settings.level || '1';
-ui.music.checked = settings.music!==undefined?settings.music:true;
 ui.sfx.checked = state.sfx;
 ui.hints.checked = state.hints;
 
 // ==== Аудио ====
-const AudioKit=(()=>{let C=null,gM=null,gMu=null,mu=null,playing=false;
-function ensure(){
-  if(!C){
-    const A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
-    C=new A();
-    gM=C.createGain(); gM.gain.value=.9; gM.connect(C.destination);
-    gMu=C.createGain(); gMu.gain.value=.12; gMu.connect(C.destination);
+const AudioKit=(()=>{let C=null,gM=null;
+  function ensure(){
+    if(!C){
+      const A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
+      C=new A();
+      gM=C.createGain(); gM.gain.value=.9; gM.connect(C.destination);
+    }
+    return C;
   }
-  return C;
-}
-function resume(){ const c=ensure(); if(c&&c.state==='suspended') return c.resume(); return Promise.resolve(); }
-function beep(f=480,d=.07){ const c=ensure(); if(!c) return; resume(); const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(gM); g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.start(); o.stop(c.currentTime+d); }
-function startMusic(){ if(playing) return; const c=ensure(); if(!c) return; resume().then(()=>{
-  mu=C.createGain(); mu.gain.value=.0001; mu.connect(gMu);
-  const root=196, tones=[root, root*5/4, root*3/2, root*15/8];
-  tones.forEach((f,i)=>{
-    const o=C.createOscillator(); o.type='sine'; o.frequency.value=f; const g=C.createGain(); g.gain.value=.0002; o.connect(g); g.connect(mu); o.start();
-    const l=C.createOscillator(), lg=C.createGain(); l.type='sine'; l.frequency.value=.04+i*.02; lg.gain.value=18; l.connect(lg); lg.connect(o.frequency); l.start();
-  });
-  mu.gain.exponentialRampToValueAtTime(.35,C.currentTime+1.4);
-  playing=true;
-}); }
-function toggle(on){ const c=ensure(); if(!c) return; resume(); if(on){ startMusic(); } else if(playing&&mu){ mu.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.5); setTimeout(()=>{try{mu.disconnect();}catch{} mu=null; playing=false;},650); }}
-document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); if(ui.music.checked) startMusic(); }, {once:true});
-return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)}, music:toggle };
+  function resume(){ const c=ensure(); if(c&&c.state==='suspended') return c.resume(); return Promise.resolve(); }
+  function beep(f=480,d=.07){ const c=ensure(); if(!c) return; resume(); const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(gM); g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.start(); o.stop(c.currentTime+d); }
+  document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); }, {once:true});
+  return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)} };
 })();
 
 // ==== Логика доски ====
@@ -210,7 +196,6 @@ ui.leave.addEventListener('click',()=>{ if(state.ws) send({type:'leave_room'}); 
 ui.joinById.addEventListener('click',()=>{ const roomId=ui.roomInput.value.trim(); if(!roomId) return; state.mode='online'; ui.mode.value='online'; connect(); send({type:'join_room',roomId,color:'auto'}); });
 ui.mode.addEventListener('change',()=>{ state.mode=ui.mode.value; ui.status.textContent= state.mode==='online'?'Онлайн-режим':'Локальный режим'; updateUI(); });
 ui.level.addEventListener('change',()=>{ saveSettings(); updateUI(); });
-ui.music.addEventListener('change',e=>{ AudioKit.music(e.target.checked); saveSettings(); });
 ui.sfx.addEventListener('change',e=>{ state.sfx=!!e.target.checked; saveSettings(); });
 ui.hints.addEventListener('change',e=>{ state.hints=!!e.target.checked; saveSettings(); draw(); });
 ui.hintOnce.addEventListener('click',()=>{ showBestMoveHint(); });

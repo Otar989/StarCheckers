@@ -1,4 +1,4 @@
-let ctx, masterGain, compressor, isPlaying = false, loopNode, started = false;
+let ctx, masterGain, compressor;
 
 function createContext() {
   if (ctx) return;
@@ -10,82 +10,7 @@ function createContext() {
   masterGain.connect(ctx.destination);
 }
 
-function playNote(time, freq, dur = 0.3) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "square";
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0, time);
-  gain.gain.linearRampToValueAtTime(0.4, time + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-  osc.connect(gain); gain.connect(compressor);
-  osc.start(time); osc.stop(time + dur + 0.05);
-}
-
-function playChord(time, notes, dur = 0.6) {
-  notes.forEach(freq => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    // Мягкий маллет: sine + лёгкий triangle микс через detune
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    const tri = ctx.createOscillator();
-    tri.type = "triangle";
-    tri.frequency.value = freq * 2;
-
-    const mix = ctx.createGain();
-    mix.gain.value = 0.3;
-    tri.connect(mix);
-    mix.connect(gain);
-
-    osc.connect(gain);
-    gain.connect(compressor);
-
-    // ADSR
-    const a=0.02, d=0.12, s=0.6, r=0.3;
-    gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(0.9, time+a);
-    gain.gain.linearRampToValueAtTime(0.9*s, time+a+d);
-    gain.gain.linearRampToValueAtTime(0, time+dur+r);
-
-    osc.start(time);
-    tri.start(time);
-    osc.stop(time+dur+r+0.02);
-    tri.stop(time+dur+r+0.02);
-  });
-}
-
-function scheduleLoop() {
-  const beat = 0.35; // ~170 BPM
-  const start = ctx.currentTime + 0.05;
-  const melody = [
-    329.63,392.00,440.00,392.00,329.63,329.63,392.00,329.63,
-    261.63,293.66,246.94,261.63,220.00,246.94,261.63,329.63
-  ];
-  melody.forEach((f,i)=> playNote(start + i*beat, f, beat*0.9));
-  const chords = [
-    [261.63,329.63,392.00],
-    [293.66,349.23,440.00],
-    [261.63,329.63,392.00],
-    [220.00,277.18,329.63]
-  ];
-  chords.forEach((ch,i)=> playChord(start + i*beat*4, ch, beat*4));
-  setTimeout(scheduleLoop, melody.length * beat * 1000 - 100);
-}
-
 export function initAudio() { createContext(); }
-
-export function toggleMusic(on) {
-  createContext();
-  if (on && !isPlaying) {
-    if (ctx.state === "suspended") ctx.resume();
-    isPlaying = true;
-    scheduleLoop();
-  } else if (!on && isPlaying) {
-    isPlaying = false;
-    // фактическая остановка — за счёт отсутствия рескейджулинга
-  }
-}
 
 export function playMove() {
   createContext();
@@ -103,5 +28,5 @@ export function playMove() {
 
 export function stopAll() {
   if (ctx && ctx.state !== "closed") ctx.close();
-  ctx = null; masterGain = null; compressor = null; isPlaying = false;
+  ctx = null; masterGain = null; compressor = null;
 }

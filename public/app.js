@@ -12,7 +12,7 @@ const MODE_AI='ai', MODE_HOT='hotseat', MODE_ON='online';
 const state = {
   board:[], turn:W, history:[], record:[], curPly:-1,
   selected:null, legal:[], mode:MODE_AI,
-  sfx:true, musicOn:true, hints:false,
+  sfx:true, hints:false,
   aiThinking:false,
   drag:null, anim:null,
   ws:null, roomId:null, myColor:null
@@ -24,7 +24,7 @@ const ctx = cv.getContext('2d');
 const ui = {
   mode: $('#mode'), level: $('#level'), stake: $('#stake'),
   find: $('#find'), leave: $('#leave'),
-  music: $('#music'), sfx: $('#sfx'), hints: $('#hints'),
+  sfx: $('#sfx'), hints: $('#hints'),
   hintOnce: $('#hintOnce'), newBtn: $('#new'), undo: $('#undo'),
   turn: $('#turn'), score: $('#score'), status: $('#status'),
   moves: $('#moves'), roomId: $('#roomId'), myColor: $('#myColor'),
@@ -33,24 +33,19 @@ const ui = {
 function $(s){return document.querySelector(s);}
 
 // ==== Аудио (спокойная мелодия + sfx) ====
-const AudioKit=(()=>{let ctx=null,gSfx=null,gMu=null,playing=false,timer=null;
+const AudioKit=(()=>{let ctx=null,gSfx=null;
 function ensure(){
   if(!ctx){
     const A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
     ctx=new A();
     gSfx=ctx.createGain(); gSfx.gain.value=.9; gSfx.connect(ctx.destination);
-    gMu=ctx.createGain(); gMu.gain.value=.15; gMu.connect(ctx.destination);
   }
   return ctx;
 }
 function resume(){ const c=ensure(); if(c&&c.state==='suspended') return c.resume(); return Promise.resolve(); }
 function beep(f=480,d=.07){ const c=ensure(); if(!c) return; resume(); const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f; o.connect(g); g.connect(gSfx); g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.start(); o.stop(c.currentTime+d); }
-function playNote(freq){ const t=ctx.currentTime, o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(gMu); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.12,t+.05); g.gain.exponentialRampToValueAtTime(.0001,t+.5); o.start(t); o.stop(t+.6); }
-const seq=[0,3,7,10,7,3]; let idx=0; function loop(){ if(!playing) return; const root=220; playNote(root*Math.pow(2,seq[idx]/12)); idx=(idx+1)%seq.length; timer=setTimeout(loop,500); }
-function start(){ if(playing) return; const c=ensure(); if(!c) return; resume().then(()=>{ playing=true; gMu.gain.setValueAtTime(.0001,c.currentTime); gMu.gain.exponentialRampToValueAtTime(.25,c.currentTime+1); loop(); }); }
-function stop(){ if(!ctx||!playing) return; playing=false; if(timer) clearTimeout(timer),timer=null; const t=ctx.currentTime; gMu.gain.exponentialRampToValueAtTime(.0001,t+.5); }
-document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); if(ui.music.checked) start(); }, {once:true});
-return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)}, music:(on)=>on?start():stop() };
+document.addEventListener('pointerdown', ()=>{ const c=ensure(); if(!c) return; resume(); }, {once:true});
+return { sfx:{move:()=>beep(520,.06), cap:()=>{beep(220,.06); setTimeout(()=>beep(320,.08),60)}, sel:()=>beep(760,.04)} };
 })();
 
 // ==== Логика доски (клиентская копия) ====
@@ -125,7 +120,6 @@ ui.joinById.addEventListener('click',()=>{ const roomId=ui.roomInput.value.trim(
 
 ui.mode.addEventListener('change',()=>{ state.mode=ui.mode.value; ui.status.textContent= state.mode==='online'?'Онлайн-режим':'Локальный режим'; updateUI(); });
 ui.level.addEventListener('change',()=> updateUI());
-ui.music.addEventListener('change',e=> AudioKit.music(e.target.checked));
 ui.sfx.addEventListener('change',e=> state.sfx=!!e.target.checked);
 ui.hints.addEventListener('change',e=>{ state.hints=!!e.target.checked; draw(); });
 ui.hintOnce.addEventListener('click',()=> showBestMoveHint());

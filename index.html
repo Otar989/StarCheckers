@@ -87,9 +87,7 @@
               <option value="graphite">Graphite</option>
             </select>
           </label>
-          <label class="switch"><input id="musicOn" type="checkbox" checked/> Музыка</label>
           <label class="switch"><input id="sfxOn" type="checkbox" checked/> Звуки ходов</label>
-          <p style="opacity:.8">Музыка включится после первого нажатия.</p>
           <div style="height:16px"></div>
           <button id="startGame" class="btn">Новая игра</button>
         </div>
@@ -103,7 +101,6 @@
         <button id="btnHint" class="btn secondary">Подсказка</button>
         <button id="btnRestart" class="btn">Сдаться / Новая</button>
         <div style="flex:1"></div>
-        <label class="switch"><input id="toggleMusic" type="checkbox" checked/> Музыка</label>
         <label class="switch"><input id="toggleSfx" type="checkbox" checked/> Звуки</label>
       </div>
       <div class="meta">
@@ -115,10 +112,10 @@
 </div>
 
 <script type="module">
-  import { initAudio, toggleMusic, playMove as playMoveSfx } from './src/audio.js?v=2';
+  import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';
   import { showEndModal } from './src/modal.js?v=1';
   import { getLegalMoves } from './src/moves.js?v=1';
-  window.AudioAPI = { initAudio, toggleMusic, playMove: playMoveSfx, showEndModal, getLegalMoves };
+  window.AudioAPI = { initAudio, playMove: playMoveSfx, showEndModal, getLegalMoves };
   window.addEventListener('pointerdown', () => {
     if (!window.__audioStarted) {
       window.__audioStarted = true;
@@ -149,9 +146,9 @@ const UI = {
   level:document.getElementById('level'),
   mode:document.getElementById('mode'),
   yourColor:document.getElementById('yourColor'),
-  musicOn:document.getElementById('musicOn'), sfxOn:document.getElementById('sfxOn'),
+  sfxOn:document.getElementById('sfxOn'),
   theme:document.getElementById('themeSelect'),
-  tMusic:document.getElementById('toggleMusic'), tSfx:document.getElementById('toggleSfx'),
+  tSfx:document.getElementById('toggleSfx'),
   undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
   // элементы для панели тестов удалены
 };
@@ -189,23 +186,19 @@ function updateThemeColors(){
 }
 
 const savedSettings = JSON.parse(localStorage.getItem('settings')||'{}');
-UI.musicOn.checked = savedSettings.music ?? true;
 UI.sfxOn.checked = savedSettings.sfx ?? true;
 UI.theme.value = savedSettings.theme || 'classic';
 document.body.classList.add('theme-'+UI.theme.value);
 updateThemeColors();
-UI.tMusic.checked = UI.musicOn.checked;
 UI.tSfx.checked = UI.sfxOn.checked;
 
 function saveSettings(){
   localStorage.setItem('settings', JSON.stringify({
-    music:UI.musicOn.checked,
     sfx:UI.sfxOn.checked,
     theme:UI.theme.value
   }));
 }
 
-UI.musicOn.addEventListener('change', ()=>{ saveSettings(); if(window.AudioAPI) window.AudioAPI.toggleMusic(UI.musicOn.checked); });
 UI.sfxOn.addEventListener('change', ()=>{ UI.tSfx.checked = UI.sfxOn.checked; saveSettings(); });
 UI.theme.addEventListener('change', ()=>{
   document.body.classList.remove('theme-classic','theme-walnut','theme-graphite');
@@ -479,14 +472,13 @@ async function thinkAI(){
   State.lock=false; syncUI();
 }
 function newGameFromMenu(){
-  if(window.AudioAPI) window.AudioAPI.toggleMusic(UI.musicOn.checked);
   State.board=startBoard(); State.turn=LIGHT; State.history=[]; State.gameOver=false; State.status="Идёт игра";
   State.mustCapture = UI.mustCap.checked;
   State.mode = UI.mode.value;
   State.humanColor = UI.yourColor.value==="white"? LIGHT: DARK;
   State.aiDepth = parseInt(UI.level.value,10);
   State.selectable=[]; State.movesCache=null; State.dragging=null; State.hover=null;
-  UI.tMusic.checked = UI.musicOn.checked; UI.tSfx.checked = UI.sfxOn.checked;
+  UI.tSfx.checked = UI.sfxOn.checked;
   if(State.mode==="ai" && State.humanColor!==State.turn){ setTimeout(thinkAI, 200); }
   toScreen('game'); syncUI();
 }
@@ -513,7 +505,6 @@ UI.hint.addEventListener('click', ()=>{
   draw();
 });
 UI.restart.addEventListener('click', ()=>{ toScreen('menu'); });
-UI.tMusic.addEventListener('change', e=>{ if(window.AudioAPI) window.AudioAPI.toggleMusic(e.target.checked); });
 UI.tSfx.addEventListener('change', e=>{ UI.sfxOn.checked = e.target.checked; saveSettings(); });
 UI.start.addEventListener('click', newGameFromMenu);
 UI.toMenu.addEventListener('click', ()=>toScreen('menu'));
