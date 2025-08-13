@@ -1,5 +1,4 @@
 :root{
-  /* Тема Graphite — единственная */
   --bg:#0b0f15; --text:#e6ebf2;
   --surface:#11161d; --surface-2:#0f141a;
   --board-light:#2b3038; --board-dark:#1a1f26;
@@ -7,60 +6,61 @@
   --accent:#9ac6ff; --btn:#3a4352; --btn-hover:#465063;
   --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.35);
 
-  /* Телеграм/браузер высота */
-  --vh: 1dvh;
-  /* уже есть safe-area; добавим буфер шапки TG */
+  /* безопасные зоны и буфер шапки TG */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --tg-header: 56px;
-  --top-safe-buffer: calc(var(--safe-top) + var(--tg-header));
+  --tg-header: 56px; /* перепишем из JS */
 }
 
 html, body{
   height:100%; overflow:hidden; overscroll-behavior:none;
   background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
 }
 
 /* Корневой контейнер приложения */
 #app.app-root{
   position:fixed; inset:0;
   display:grid; gap:12px;
-  grid-template-rows:auto 1fr auto;          /* appbar / stage / footer */
-  padding: calc(var(--top-safe-buffer) + 8px)
+  grid-template-rows:auto 1fr auto;             /* header / stage / footer */
+  padding: calc(var(--safe-top) + var(--tg-header) + 8px)
            calc(var(--safe-right) + 12px)
            calc(var(--safe-bottom) + 12px)
            calc(var(--safe-left) + 12px);
 }
 
-/* Верхняя панель НЕ должна иметь отрицательных маргинов и фиксированных позиций */
-.appbar{ position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+/* Шапка и футер не фиксированные, без отрицательных отступов */
+.appbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .logo{ font-weight:800; letter-spacing:.2px; }
 .btn-ghost{ background:rgba(255,255,255,.06); border:0; color:var(--text); padding:8px 12px; border-radius:12px; }
+.footer{ min-height:60px; }
+.controls{ display:grid; grid-auto-flow:column; gap:8px; }
+.btn{ background:var(--btn); color:#fff; border:0; padding:10px 14px; border-radius:14px; }
+.btn:hover{ background:var(--btn-hover); }
+.btn-primary{ background:var(--accent); color:#10151b; }
 
-/* Сцена между appbar и footer — от неё считаем центрирование */
-.stage{
+/* Сцена — область между appbar и footer. Высоту рассчитает JS. */
+#stage{
   min-height:0;
-  block-size:100%;
   overflow:clip;
+  contain: layout size style; /* исключаем влияние внешних прыжков */
 }
 .view{ inline-size:100%; block-size:100%; }
 .view[hidden]{ display:none !important; }
 
-/* Центрирование всего стека (доска + подпись) */
+/* Центрируем СТЕК: [доска] + [подпись] */
 .game-center{
-  inline-size:100%;
-  block-size:100%;
+  inline-size:100%; block-size:100%;
   display:grid;
-  grid-template-rows:auto auto;
-  justify-items:center;
-  align-content:center;
+  grid-template-rows: auto auto;      /* доска, подпись */
+  justify-items:center;               /* по горизонтали */
+  align-content:center;               /* по вертикали весь стек */
   row-gap:12px;
 }
 
-/* Обёртка доски: размер задаёт JS */
+/* Доска */
 .board-wrap{
   position:relative;
   aspect-ratio:1/1;
@@ -73,24 +73,20 @@ html, body{
   aspect-ratio:1/1;
 }
 .board canvas{ inline-size:100%; block-size:100%; display:block; }
+.board .cell.light{ background:var(--board-light); }
+.board .cell.dark{  background:var(--board-dark); }
+.piece.light{ background:radial-gradient(ellipse at 35% 30%, #fff, var(--piece-light)); }
+.piece.dark{  background:radial-gradient(ellipse at 35% 30%, #b00000, var(--piece-dark)); }
 
-/* Подпись под доской — читабельная, не обрезается */
+/* Подпись под доской */
 .board-caption{
   padding:10px 12px;
   background:rgba(255,255,255,.06);
   border-radius:12px;
-  max-inline-size: min(92vw, 520px);
-  color:var(--text);
+  max-inline-size:min(92vw, 520px);
 }
 .board-caption .stat{ line-height:1.2; margin:2px 0; opacity:.9; }
 .board-caption .stat b{ opacity:1; }
-
-/* Низ: одна строка, не перекрывает сцену */
-.footer{ min-height:60px; }
-.controls{ display:grid; grid-auto-flow:column; gap:8px; }
-.btn{ background:var(--btn); color:#fff; border:0; padding:10px 14px; border-radius:14px; }
-.btn:hover{ background:var(--btn-hover); }
-.btn-primary{ background:var(--accent); color:#10151b; }
 
 /* Настройки */
 .settings-body{ display:grid; gap:12px; max-height:100%; overflow:auto; }
@@ -106,13 +102,7 @@ select:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(154,198,255,
 .checkbox{ display:flex; align-items:center; gap:8px; }
 .actions{ display:flex; justify-content:flex-start; }
 
-/* Игровые цвета */
-.board .cell.light{ background:var(--board-light); }
-.board .cell.dark{  background:var(--board-dark); }
-.piece.light{ background:radial-gradient(ellipse at 35% 30%, #fff, var(--piece-light)); }
-.piece.dark{  background:radial-gradient(ellipse at 35% 30%, #b00000, var(--piece-dark)); }
-
-/* Жесты только наши */
+/* Жесты остаются нашими */
 .board, .board *{ touch-action:none; }
 
 /* Планшет/десктоп: доска центрируется всё равно — без влияния сайд-панели */
