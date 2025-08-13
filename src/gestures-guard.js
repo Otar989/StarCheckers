@@ -1,6 +1,4 @@
 (function(){
-  const isTG = !!(window.Telegram && Telegram.WebApp);
-  if (isTG){ try{ Telegram.WebApp.enableClosingConfirmation(); Telegram.WebApp.expand(); }catch(e){} }
   function block(e){
     const board = document.querySelector('.board');
     if (board && (e.target===board || board.contains(e.target))) e.preventDefault();
