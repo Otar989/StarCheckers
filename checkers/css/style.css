@@ -4,6 +4,9 @@ body {
   /* fallback wood-like gradient to avoid binary asset */
   background: repeating-linear-gradient(45deg,#b58863,#b58863 20px,#d9b38c 20px,#d9b38c 40px);
   color: #222;
+  touch-action: none;
+  overscroll-behavior: none;
+  overflow: hidden;
 }
 .screen {
   display: none;
