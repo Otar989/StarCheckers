@@ -10,6 +10,18 @@ function createContext() {
   masterGain.connect(ctx.destination);
 }
 
+function playNote(time, freq, dur = 0.3) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(0.4, time + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  osc.connect(gain); gain.connect(compressor);
+  osc.start(time); osc.stop(time + dur + 0.05);
+}
+
 function playChord(time, notes, dur = 0.6) {
   notes.forEach(freq => {
     const osc = ctx.createOscillator();
@@ -44,24 +56,21 @@ function playChord(time, notes, dur = 0.6) {
 }
 
 function scheduleLoop() {
-  const bar = 2.4; // размер такта
+  const beat = 0.35; // ~170 BPM
   const start = ctx.currentTime + 0.05;
-  for (let i=0;i<8;i++) {
-    const t = start + i*bar;
-    // Спокойная последовательность: Cmaj7, Am7, Dm7, G7
-    const seq = [
-      [261.63, 329.63, 392.00], // C E G
-      [220.00, 293.66, 349.23], // A C D#
-      [293.66, 349.23, 440.00], // D F A
-      [196.00, 246.94, 392.00], // G B G
-    ];
-    const chord = seq[i%4];
-    playChord(t, chord, 1.8);
-    // лёгкий колокольчик на каждую долю
-    for (let k=0;k<4;k++) playChord(t + k*0.6, [880], 0.25);
-  }
-  // перезапуск
-  setTimeout(scheduleLoop, 800); 
+  const melody = [
+    329.63,392.00,440.00,392.00,329.63,329.63,392.00,329.63,
+    261.63,293.66,246.94,261.63,220.00,246.94,261.63,329.63
+  ];
+  melody.forEach((f,i)=> playNote(start + i*beat, f, beat*0.9));
+  const chords = [
+    [261.63,329.63,392.00],
+    [293.66,349.23,440.00],
+    [261.63,329.63,392.00],
+    [220.00,277.18,329.63]
+  ];
+  chords.forEach((ch,i)=> playChord(start + i*beat*4, ch, beat*4));
+  setTimeout(scheduleLoop, melody.length * beat * 1000 - 100);
 }
 
 export function initAudio() { createContext(); }
