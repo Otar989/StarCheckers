@@ -25,6 +25,20 @@ npm run build
 npm run preview
 ```
 
+## Deploy on Render
+
+Build Command: `npm ci && npm run build`
+
+Publish Directory: `dist`
+
+Environment: Static Site
+
+Environment Variables:
+
+- `NODE_VERSION=18`
+
+SPA fallback via `static.json`
+
 ## Telegram Mini App
 Подключаемые скрипты (в этом порядке):
 1. `tg-viewport.ts`
