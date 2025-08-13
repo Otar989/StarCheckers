@@ -9,10 +9,13 @@
 
   /* Телеграм/браузер высота */
   --vh: 1dvh;
+  /* уже есть safe-area; добавим буфер шапки TG */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  --tg-header: 56px;
+  --top-safe-buffer: calc(var(--safe-top) + var(--tg-header));
 }
 
 html, body{
@@ -21,27 +24,27 @@ html, body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
 }
 
-/* Корень: фиксируем реальные границы и учитываем safe-area */
+/* Корневой контейнер приложения */
 #app.app-root{
   position:fixed; inset:0;
   display:grid; gap:12px;
-  grid-template-rows:auto 1fr auto; /* appbar / stage / footer */
-  padding: calc(var(--safe-top) + 8px)
+  grid-template-rows:auto 1fr auto;          /* appbar / stage / footer */
+  padding: calc(var(--top-safe-buffer) + 8px)
            calc(var(--safe-right) + 12px)
            calc(var(--safe-bottom) + 12px)
            calc(var(--safe-left) + 12px);
 }
 
-/* Верхняя панель — без фиксированных высот */
-.appbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+/* Верхняя панель НЕ должна иметь отрицательных маргинов и фиксированных позиций */
+.appbar{ position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .logo{ font-weight:800; letter-spacing:.2px; }
 .btn-ghost{ background:rgba(255,255,255,.06); border:0; color:var(--text); padding:8px 12px; border-radius:12px; }
 
-/* Сцена (между appbar и footer) — это ЕДИНСТВЕННОЕ место, от которого считаем центр */
+/* Сцена между appbar и footer — от неё считаем центрирование */
 .stage{
   min-height:0;
-  block-size: 100%;
-  overflow: clip;           /* без скролла сцены */
+  block-size:100%;
+  overflow:clip;
 }
 .view{ inline-size:100%; block-size:100%; }
 .view[hidden]{ display:none !important; }
