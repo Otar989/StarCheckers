@@ -1,17 +1,15 @@
+/* ПОДКЛЮЧИТЬ ПЕРВЫМ */
 (function(){
-  const setVH = () => {
+  const set = () => {
     const tg = window.Telegram && Telegram.WebApp;
-    const stable = tg?.viewportStableHeight;
-    const h = stable || tg?.viewportHeight || window.innerHeight;
-    document.documentElement.style.setProperty('--vh', (h/100)+'px');
+    const h = tg?.viewportStableHeight || tg?.viewportHeight || window.innerHeight;
     const app = document.getElementById('app');
     if (app){ app.style.height = h+'px'; app.style.maxHeight = h+'px'; }
   };
-  setVH();
+  set();
   if (window.Telegram && Telegram.WebApp){
-    try{ Telegram.WebApp.onEvent('viewportChanged', setVH); }catch(e){}
+    try{ Telegram.WebApp.onEvent('viewportChanged', set); }catch(e){}
     try{ Telegram.WebApp.expand(); }catch(e){}
-    try{ Telegram.WebApp.enableClosingConfirmation(); }catch(e){}
   }
-  window.addEventListener('resize', setVH);
+  window.addEventListener('resize', set);
 })();
