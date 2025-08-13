@@ -1,57 +1,46 @@
 :root{
-  --vh: 1dvh; /* переопределяется из JS */
+  --vh: 1dvh; /* будет переопределено из JS */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Тема по умолчанию (classic) */
   --bg: #0f172a;
-  --panel:#111827; --text:#e5e7eb;
+  --panel: #111827;
+  --text: #e5e7eb;
   --board-light:#d6b07b; --board-dark:#6b4a32;
   --piece-light:#fff6e8; --piece-dark:#8b1e1e;
+  --accent:#ffd166;
 }
-.theme-walnut{
-  --bg:#0e0f12; --panel:#12151b; --text:#e7e7ea;
-  --board-light:#c9a66b; --board-dark:#4b2e16;
-  --piece-light:#f2efe6; --piece-dark:#7a2a2a;
-}
-.theme-classic{}
-.theme-graphite{
-  --bg:#0b0d12; --panel:#0f1115; --text:#e4e6eb;
-  --board-light:#2b2f36; --board-dark:#1a1d23;
-  --piece-light:#f2f2f2; --piece-dark:#b32d2d;
-}
-html, body {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-  background: var(--bg, #0f172a);
-}
+
+html, body{ height:100%; overflow:hidden; overscroll-behavior:none; background:var(--bg); color:var(--text); }
+
 #app.app-root{
   position:fixed; inset:0;
-  display:grid;
+  display:grid; gap:8px;
   grid-template-rows:auto 1fr auto; /* header / content / footer */
   padding: calc(var(--safe-top) + 6px) calc(var(--safe-right) + 10px)
            calc(var(--safe-bottom) + 10px) calc(var(--safe-left) + 10px);
-  gap:8px;
-  height:100%; /* будет переписано инлайн через JS под стабильную высоту TG */
 }
 
-/* Контентная область: НИКАКИХ фиксированных высот! */
-.content{
-  min-height:0; /* разрешить ребёнку ужиматься */
-  display:grid;
-  grid-template-columns: 1fr;
-  grid-auto-rows:minmax(0,1fr);
-}
+.header{ display:flex; align-items:center; gap:8px; }
+.header .title{ font-weight:700; }
+.btn-ghost{ background:rgba(255,255,255,0.08); border:0; border-radius:12px; padding:8px 12px; color:var(--text); }
 
-/* Игровой экран */
+.content{ min-height:0; }
+.view{ width:100%; height:100%; }
+.view[hidden]{ display:none !important; }
+
 .game{
   min-height:0;
   display:grid;
   place-items:center;
+  grid-template-columns: 1fr;
+  grid-auto-rows:minmax(0,1fr);
+  gap:12px;
 }
 
-/* Квадратная обёртка. Точные px проставит JS. */
 .board-wrap{
   position:relative;
   width:100%;
@@ -59,62 +48,58 @@ html, body {
   max-width:100%;
   max-height:100%;
 }
-
-.board{
-  position:absolute; inset:0;
-  aspect-ratio:1/1;
-}
+.board{ position:absolute; inset:0; aspect-ratio:1/1; }
 .board canvas{width:100%;height:100%;display:block;}
 
-/* Экран настроек прокручиваемый, с отступом под футер */
-.settings{
+.side-panel{ width:100%; }
+
+.footer{ min-height:56px; }
+.controls{ display:grid; grid-auto-flow:column; gap:8px; }
+.btn{ border:0; border-radius:14px; padding:10px 14px; background:#3a4352; color:#fff; }
+.btn-primary{ background: var(--accent); color:#2b2b2b; }
+
+.settings-form{
   min-height:0;
   overflow:auto;
-  padding-bottom: calc(72px + var(--safe-bottom)); /* запас под высоту футера */
+  background:var(--panel);
+  border-radius:16px;
+  padding:16px;
 }
+.settings-form fieldset{ border:0; margin:0 0 16px; }
+.settings-form legend{ font-weight:700; margin-bottom:8px; }
 
-/* Футер всегда внизу макета, БЕЗ position:fixed поверх контента */
-.footer{
-  min-height:56px;
-}
-
-/* Кнопки и панели — адаптивные от ширины экрана */
-.controls {
-  display: grid;
-  grid-auto-flow: column;
-  gap: 8px;
-}
-.controls button{ font-size: clamp(12px, 1.6vw, 16px); }
-
-@media (min-width:820px) and (orientation:landscape){
-  .content{
-    grid-template-columns:minmax(0,1fr) 340px; /* игра + панель/настройки */
-  }
-}
+/* Жесты управляем сами */
 .board, .board *{ touch-action:none; }
-body{ background:var(--bg); color:var(--text); }
-.board .cell.light{ background:var(--board-light); }
-.board .cell.dark{  background:var(--board-dark); }
-.piece.light{ background:radial-gradient(ellipse at 30% 30%, #fff, var(--piece-light)); }
-.piece.dark{  background:radial-gradient(ellipse at 30% 30%, #7a0000, var(--piece-dark)); }
 
-.cell.hint::after{
-  content:'';
-  position:absolute; inset:12%;
-  border-radius:8px;
-  outline:3px solid rgba(255, 215, 0, 0.9);
-  box-shadow:0 0 12px rgba(255,215,0,0.6);
+/* Планшет/десктоп: игра + панель/настройки рядом */
+@media (min-width:820px) and (orientation:landscape){
+  .game{ grid-template-columns:minmax(0,1fr) 320px; align-items:center; }
+  .settings-form{ height:100%; }
 }
-.piece.selected{ box-shadow:0 0 0 4px rgba(80,180,255,0.9) inset; }
 
-.modal-root{position:absolute;inset:0;display:grid;place-items:center;z-index:1000}
-.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
-.modal{position:relative;min-width:320px;max-width:92vw;padding:24px;border-radius:18px;
-  background:linear-gradient(180deg, var(--panel), rgba(255,255,255,0.02));
-  box-shadow:0 12px 40px rgba(0,0,0,.4)}
-.modal .title{font-size:28px;font-weight:800;margin-bottom:6px}
-.modal .subtitle{opacity:.8;margin-bottom:16px}
-.modal .actions{display:flex;gap:12px;justify-content:center}
-.modal .actions button{padding:10px 16px;border-radius:12px;border:0;cursor:pointer}
-.modal .actions button#again{background:#ffd166}
-.modal .actions button#settings{background:#94a3b8;color:#0b0d12}
+/* Classic (уже задан переменными по умолчанию) */
+body.theme-classic{}
+
+/* Новый Walnut — тёплая палитра, контрастнее и светлее доска */
+body.theme-walnut{
+  --bg:#0e0f12;
+  --panel:#151820;
+  --text:#f1f5f9;
+  --board-light:#c9a66b;    /* светлое тёплое дерево */
+  --board-dark:#5a3a1c;     /* тёмный орех */
+  --piece-light:#f5efe3;    /* слоновая кость */
+  --piece-dark:#7d2a1f;     /* терракотовый красный */
+  --accent:#ffc857;         /* янтарная кнопка */
+}
+
+/* Graphite — тёмная индустриальная тема */
+body.theme-graphite{
+  --bg:#0b0d12;
+  --panel:#0f1115;
+  --text:#e4e6eb;
+  --board-light:#2b2f36;
+  --board-dark:#1a1d23;
+  --piece-light:#e7e7e7;
+  --piece-dark:#b13232;
+  --accent:#9ac6ff;
+}

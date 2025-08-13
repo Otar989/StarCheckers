@@ -9,99 +9,81 @@
 <link rel="stylesheet" href="./styles.css?v=1">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="./src/tg-viewport.js"></script>
-<style>
-  *{box-sizing:border-box}
-  .header{display:flex;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
-  .brand{font-weight:700;letter-spacing:.4px}
-  .screens{padding:16px}
-  .row{display:flex;gap:16px;flex-wrap:wrap}
-  .col{flex:1 1 280px}
-  .btn{
-    background:linear-gradient(180deg,#f7d7a2,#d9a257);
-    color:#2b2114;border:none;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;
-    box-shadow:0 6px 24px rgba(0,0,0,.25); transition:transform .1s ease;
-  }
-  .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#3a3f4a;color:#e9edf6}
-  label.switch{display:flex;align-items:center;gap:10px;margin:8px 0}
-  label.switch input{accent-color:var(--accent);width:20px;height:20px}
-  .select, .input{
-    width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.08); background:#333846; color:#e9edf6;
-  }
-  .board canvas{display:block;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-  .meta{margin-top:10px;font-size:14px;opacity:.9;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .hidden{display:none}
-</style>
 </head>
 <body>
 <div id="app" class="app-root">
   <header class="header">
-    <div class="brand">Русские шашки</div>
-    <div style="flex:1"></div>
-    <button id="btnSettings" class="btn secondary hidden">Настройки</button>
+    <div class="title">Русские шашки</div>
+    <button id="btn-settings" class="btn-ghost">Настройки</button>
+    <button id="btn-back" class="btn-ghost" hidden>Назад</button>
   </header>
 
   <main class="content">
-    <section class="game">
-      <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
-      <div class="meta">
-        <div>Ход: <b id="turnLabel">—</b></div>
-        <div>Статус: <b id="statusLabel">—</b></div>
+    <section id="view-game" class="view">
+      <div class="game">
+        <div class="board-wrap"><div class="board"><canvas id="board" width="1024" height="1024"></canvas></div></div>
+        <aside class="side-panel">
+          <div class="meta">
+            <div>Ход: <b id="turnLabel">—</b></div>
+            <div>Статус: <b id="statusLabel">—</b></div>
+          </div>
+        </aside>
       </div>
     </section>
 
-    <section class="settings" hidden>
-      <div class="row">
-        <div class="col">
-          <h3>Игра</h3>
-          <label class="switch">Режим
+    <section id="view-settings" class="view" hidden>
+      <form class="settings-form">
+        <fieldset>
+          <legend>Игра</legend>
+          <label>Режим
             <select id="mode" class="select">
               <option value="ai">1 игрок (с ИИ)</option>
               <option value="pvp">2 игрока</option>
             </select>
           </label>
-          <label class="switch">Уровень ИИ
+          <label>Уровень ИИ
             <select id="level" class="select">
               <option value="0">0 (быстрый)</option>
               <option value="1" selected>1 (средний)</option>
               <option value="2">2 (сложный)</option>
             </select>
           </label>
-          <label class="switch"><input id="mustCapture" type="checkbox" checked/> Бить обязательно</label>
-          <label class="switch">Цвет игрока
+          <label><input id="mustCapture" type="checkbox" checked> Бить обязательно</label>
+          <label>Цвет игрока
             <select id="yourColor" class="select">
               <option value="white" selected>Белые (начинают)</option>
               <option value="black">Чёрные</option>
             </select>
           </label>
-        </div>
-        <div class="col">
-          <h3>Оформление</h3>
-          <label class="switch">Тема
-            <select id="themeSelect" class="select" name="theme">
+        </fieldset>
+        <fieldset>
+          <legend>Оформление</legend>
+          <label>Тема
+            <select id="themeSelect" name="theme">
               <option value="classic">Classic</option>
               <option value="walnut">Walnut</option>
               <option value="graphite">Graphite</option>
             </select>
           </label>
-          <label class="switch"><input id="sfxOn" type="checkbox" checked/> Звуки ходов</label>
-          <div style="height:16px"></div>
-          <button id="startGame" class="btn">Новая игра</button>
-        </div>
-      </div>
+          <label><input id="sfxOn" type="checkbox" name="sfx" checked> Звуки ходов</label>
+          <label><input id="musicOn" type="checkbox" name="music"> Музыка</label>
+        </fieldset>
+        <button type="button" id="btn-newgame" class="btn-primary">Новая игра</button>
+      </form>
     </section>
   </main>
 
   <footer class="footer">
     <div class="controls">
-      <button id="btnUndo" class="btn secondary">Отменить</button>
-      <button id="btnHint" class="btn secondary">Подсказка</button>
-      <button id="btnRestart" class="btn">Сдаться / Новая</button>
+      <button id="btnUndo" data-action="undo" class="btn">Отменить</button>
+      <button id="btnHint" data-action="hint" class="btn">Подсказка</button>
+      <button id="btnRestart" data-action="new"  class="btn btn-primary">Сдаться / Новая</button>
     </div>
   </footer>
 </div>
 
 <script src="./src/gestures-guard.js"></script>
+<script type="module" src="./index.js"></script>
 <script type="module">
   import { initAudio, playMove as playMoveSfx } from './src/audio.js?v=2';
   import { showEndModal } from './src/modal.js?v=1';
@@ -114,406 +96,375 @@
     }
   }, { once:true });
 </script>
+<script type="module">
+  import { showGame, showSettings } from './src/nav.js';
 
-<script>
-if (window.Telegram && Telegram.WebApp) {
-  try { Telegram.WebApp.expand(); } catch(e){}
-  try { Telegram.WebApp.setBackgroundColor('#0f172a'); } catch(e){}
-}
+  const SIZE=8, DARK=1, LIGHT=0;
+  const Piece = (color,isKing=false)=>({c:color,k:isKing});
+  function cloneBoard(b){ return b.map(row=>row.map(p=> p? {c:p.c,k:p.k}:null)); }
+  function inside(x,y){ return x>=0 && x<SIZE && y>=0 && y<SIZE; }
+  const DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
 
-/* =============== Вспомогательные структуры =============== */
-const SIZE=8, DARK=1, LIGHT=0;
-const Piece = (color,isKing=false)=>({c:color,k:isKing});
-function cloneBoard(b){ return b.map(row=>row.map(p=> p? {c:p.c,k:p.k}:null)); }
-function inside(x,y){ return x>=0 && x<SIZE && y>=0 && y<SIZE; }
-const DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
-
-/* =============== Инициализация =============== */
-const UI = {
-  settings:document.querySelector('.settings'),
-  game:document.querySelector('.game'),
-  settingsBtn:document.getElementById('btnSettings'),
-  board:document.getElementById('board'),
-  turn:document.getElementById('turnLabel'),
-  status:document.getElementById('statusLabel'),
-  start:document.getElementById('startGame'),
-  mustCap:document.getElementById('mustCapture'),
-  level:document.getElementById('level'),
-  mode:document.getElementById('mode'),
-  yourColor:document.getElementById('yourColor'),
-  sfxOn:document.getElementById('sfxOn'),
-  theme:document.getElementById('themeSelect'),
-  undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
-  // элементы для панели тестов удалены
-};
-
-const State = {
-  board:null, turn:LIGHT, history:[], mustCapture:true, mode:"ai", humanColor:LIGHT, aiDepth:1,
-  lock:false, dragging:null, hover:null, selectable:[], movesCache:null, gameOver:false
-};
-
-/* =============== Стартовые позиции =============== */
-function startBoard(){
-  const b = Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-  for(let y=0;y<3;y++){
-    for(let x=0;x<SIZE;x++) if((x+y)%2===1) b[y][x]=Piece(DARK,false);
-  }
-  for(let y=SIZE-3;y<SIZE;y++){
-    for(let x=0;x<SIZE;x++) if((x+y)%2===1) b[y][x]=Piece(LIGHT,false);
-  }
-  return b;
-}
-
-/* =============== Рендер =============== */
-const ctx = UI.board.getContext('2d');
-let cellPx = 1024/SIZE;
-let themeColors = {};
-
-function updateThemeColors(){
-  const st = getComputedStyle(document.body);
-  themeColors = {
-    boardLight: st.getPropertyValue('--board-light').trim(),
-    boardDark: st.getPropertyValue('--board-dark').trim(),
-    pieceLight: st.getPropertyValue('--piece-light').trim(),
-    pieceDark: st.getPropertyValue('--piece-dark').trim(),
+  const UI = {
+    board:document.getElementById('board'),
+    turn:document.getElementById('turnLabel'),
+    status:document.getElementById('statusLabel'),
+    start:document.getElementById('btn-newgame'),
+    mustCap:document.getElementById('mustCapture'),
+    level:document.getElementById('level'),
+    mode:document.getElementById('mode'),
+    yourColor:document.getElementById('yourColor'),
+    sfxOn:document.getElementById('sfxOn'),
+    undo:document.getElementById('btnUndo'), hint:document.getElementById('btnHint'), restart:document.getElementById('btnRestart'),
   };
-}
 
-const savedSettings = JSON.parse(localStorage.getItem('settings')||'{}');
-UI.sfxOn.checked = savedSettings.sfx ?? true;
-UI.theme.value = savedSettings.theme || 'classic';
-document.body.classList.add('theme-'+UI.theme.value);
-updateThemeColors();
+  const State = {
+    board:null, turn:LIGHT, history:[], mustCapture:true, mode:"ai", humanColor:LIGHT, aiDepth:1,
+    lock:false, dragging:null, hover:null, selectable:[], movesCache:null, gameOver:false
+  };
 
-function saveSettings(){
-  localStorage.setItem('settings', JSON.stringify({
-    sfx:UI.sfxOn.checked,
-    theme:UI.theme.value
-  }));
-}
+  /* =============== Стартовые позиции =============== */
+  function startBoard(){
+    const b = Array.from({length:SIZE},()=>Array(SIZE).fill(null));
+    for(let y=0;y<3;y++){
+      for(let x=0;x<SIZE;x++) if((x+y)%2===1) b[y][x]=Piece(DARK,false);
+    }
+    for(let y=SIZE-3;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++) if((x+y)%2===1) b[y][x]=Piece(LIGHT,false);
+    }
+    return b;
+  }
 
-UI.sfxOn.addEventListener('change', saveSettings);
-UI.theme.addEventListener('change', ()=>{
-  document.body.classList.remove('theme-classic','theme-walnut','theme-graphite');
-  document.body.classList.add('theme-'+UI.theme.value);
+  /* =============== Рендер =============== */
+  const ctx = UI.board.getContext('2d');
+  let cellPx = 1024/SIZE;
+  let themeColors = {};
+
+  function updateThemeColors(){
+    const st = getComputedStyle(document.body);
+    themeColors = {
+      boardLight: st.getPropertyValue('--board-light').trim(),
+      boardDark: st.getPropertyValue('--board-dark').trim(),
+      pieceLight: st.getPropertyValue('--piece-light').trim(),
+      pieceDark: st.getPropertyValue('--piece-dark').trim(),
+    };
+  }
+
+  const savedSettings = JSON.parse(localStorage.getItem('settings')||'{}');
+  UI.sfxOn.checked = savedSettings.sfx ?? true;
   updateThemeColors();
-  draw();
-  saveSettings();
-});
-function draw(){
-  const b=State.board || Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-  ctx.clearRect(0,0,UI.board.width,UI.board.height);
-  for(let y=0;y<SIZE;y++){
-    for(let x=0;x<SIZE;x++){
-      const dark=((x+y)&1)===1;
-      ctx.fillStyle = dark? themeColors.boardDark : themeColors.boardLight;
-      ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx);
-    }
-  }
-  if(State.selectable.length){
-    ctx.fillStyle='rgba(80,180,255,.25)';
-    for(const [x,y] of State.selectable) ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx);
-  }
-  if(State.hover){ ctx.fillStyle='rgba(255,255,100,.22)'; const [x,y]=State.hover; ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx); }
-  if(State.dragging && State.dragging.targets){
-    ctx.fillStyle='rgba(50,230,120,.25)';
-    for(const t of State.dragging.targets){
-      ctx.beginPath(); ctx.arc((t.x+.5)*cellPx,(t.y+.5)*cellPx, cellPx*0.22, 0, Math.PI*2); ctx.fill();
-    }
-  }
-  for(let y=0;y<SIZE;y++){
-    for(let x=0;x<SIZE;x++){
-      const p=b[y][x]; if(!p) continue;
-      if(State.dragging && State.dragging.x===x && State.dragging.y===y) continue;
-      drawPiece(x,y,p);
-    }
-  }
-  if(State.dragging){
-    drawPiece(State.dragging.fx, State.dragging.fy, State.dragging.piece, true);
-  }
-}
-function drawPiece(x,y,p,free=false){
-  const cx=(x+.5)*cellPx, cy=(y+.5)*cellPx, r=cellPx*.36;
-  ctx.save();
-  if(free){ ctx.globalAlpha=.85; }
-  const grad=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.2,cx,cy,r);
-  if(p.c===LIGHT){ grad.addColorStop(0,'#fff'); grad.addColorStop(1,themeColors.pieceLight); }
-  else { grad.addColorStop(0,'#7a0000'); grad.addColorStop(1,themeColors.pieceDark); }
-  ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-  ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
-  if(p.k){
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(255,215,120,.9)';
-    ctx.beginPath(); ctx.arc(cx,cy,r*.55,0,Math.PI*2); ctx.stroke();
-  }
-  ctx.restore();
-}
 
-/* =============== Генератор ходов (русские шашки) =============== */
-function movesFor(b, x,y, mustCap){
-  const p=b[y][x]; if(!p) return [];
-  const color=p.c, enemy=1-color;
-  const res=[];
-  function push(path,captures){
-    res.push({from:{x,y}, to:path[path.length-1], path, captures:[...captures], piece:p});
+  function saveSettings(){
+    localStorage.setItem('settings', JSON.stringify({
+      sfx:UI.sfxOn.checked
+    }));
   }
-  if(!mustCap){
-    if(!p.k){
-      const dir = (color===LIGHT? -1:1);
-      for(const dx of [-1,1]){
-        const nx=x+dx, ny=y+dir;
-        if(inside(nx,ny) && !b[ny][nx]) push([{x:nx,y:ny}],[]);
-      }
-    }else{
-      for(const [dx,dy] of DIRS){
-        let nx=x+dx, ny=y+dy;
-        while(inside(nx,ny) && !b[ny][nx]){ push([{x:nx,y:ny}],[]); nx+=dx; ny+=dy; }
+
+  UI.sfxOn.addEventListener('change', saveSettings);
+  window.addEventListener('theme-change', ()=>{ updateThemeColors(); draw(); });
+
+  function draw(){
+    const b=State.board || Array.from({length:SIZE},()=>Array(SIZE).fill(null));
+    ctx.clearRect(0,0,UI.board.width,UI.board.height);
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        const dark=((x+y)&1)===1;
+        ctx.fillStyle = dark? themeColors.boardDark : themeColors.boardLight;
+        ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx);
       }
     }
+    if(State.selectable.length){
+      ctx.fillStyle='rgba(80,180,255,.25)';
+      for(const [x,y] of State.selectable) ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx);
+    }
+    if(State.hover){ ctx.fillStyle='rgba(255,255,100,.22)'; const [x,y]=State.hover; ctx.fillRect(x*cellPx,y*cellPx,cellPx,cellPx); }
+    if(State.dragging && State.dragging.targets){
+      ctx.fillStyle='rgba(50,230,120,.25)';
+      for(const t of State.dragging.targets){
+        ctx.beginPath(); ctx.arc((t.x+.5)*cellPx,(t.y+.5)*cellPx, cellPx*0.22, 0, Math.PI*2); ctx.fill();
+      }
+    }
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        const p=b[y][x]; if(!p) continue;
+        if(State.dragging && State.dragging.x===x && State.dragging.y===y) continue;
+        drawPiece(x,y,p);
+      }
+    }
+    if(State.dragging){
+      drawPiece(State.dragging.fx, State.dragging.fy, State.dragging.piece, true);
+    }
   }
-  function searchCap(cx,cy,board,caps,path,becameKing){
-    let found=false;
-    if(!p.k && !becameKing){
-      for(const [dx,dy] of DIRS){
-        const mx=cx+dx, my=cy+dy, lx=cx+2*dx, ly=cy+2*dy;
-        if(!inside(lx,ly)||!inside(mx,my)) continue;
-        if(board[my][mx] && board[my][mx].c===enemy && !board[ly][lx]){
-          const nb=cloneBoard(board);
-          nb[my][mx]=null; nb[cy][cx]=null; nb[ly][lx]=Piece(color,false);
-          let became = becameKing || (color===LIGHT? ly===0 : ly===SIZE-1);
-          if(became) nb[ly][lx].k=true;
-          searchCap(lx,ly,nb,[...caps,{x:mx,y:my}], [...path,{x:lx,y:ly}], became);
-          found=true;
+  function drawPiece(x,y,p,free=false){
+    const cx=(x+.5)*cellPx, cy=(y+.5)*cellPx, r=cellPx*.36;
+    ctx.save();
+    if(free){ ctx.globalAlpha=.85; }
+    const grad=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.2,cx,cy,r);
+    if(p.c===LIGHT){ grad.addColorStop(0,'#fff'); grad.addColorStop(1,themeColors.pieceLight); }
+    else { grad.addColorStop(0,'#7a0000'); grad.addColorStop(1,themeColors.pieceDark); }
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
+    if(p.k){
+      ctx.lineWidth=3; ctx.strokeStyle='rgba(255,215,120,.9)';
+      ctx.beginPath(); ctx.arc(cx,cy,r*.55,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* =============== Генератор ходов (русские шашки) =============== */
+  function movesFor(b, x,y, mustCap){
+    const p=b[y][x]; if(!p) return [];
+    const color=p.c, enemy=1-color;
+    const res=[];
+    function push(path,captures){
+      res.push({from:{x,y}, to:path[path.length-1], path, captures:[...captures], piece:p});
+    }
+    if(!mustCap){
+      if(!p.k){
+        const dir = (color===LIGHT? -1:1);
+        for(const dx of [-1,1]){
+          const nx=x+dx, ny=y+dir;
+          if(inside(nx,ny) && !b[ny][nx]) push([{x:nx,y:ny}],[]);
+        }
+      }else{
+        for(const [dx,dy] of DIRS){
+          let nx=x+dx, ny=y+dy;
+          while(inside(nx,ny) && !b[ny][nx]){ push([{x:nx,y:ny}],[]); nx+=dx; ny+=dy; }
         }
       }
-    }else{
-      for(const [dx,dy] of DIRS){
-        let nx=cx+dx, ny=cy+dy; let met=null;
-        while(inside(nx,ny)){
-          if(!met && board[ny][nx]==null){ nx+=dx; ny+=dy; continue; }
-          if(!met && board[ny][nx] && board[ny][nx].c===enemy){ met={x:nx,y:ny}; nx+=dx; ny+=dy; continue; }
-          if(met && board[ny] && board[ny][nx]==null){
+    }
+    function searchCap(cx,cy,board,caps,path,becameKing){
+      let found=false;
+      if(!p.k && !becameKing){
+        for(const [dx,dy] of DIRS){
+          const mx=cx+dx, my=cy+dy, lx=cx+2*dx, ly=cy+2*dy;
+          if(!inside(lx,ly)||!inside(mx,my)) continue;
+          if(board[my][mx] && board[my][mx].c===enemy && !board[ly][lx]){
             const nb=cloneBoard(board);
-            nb[met.y][met.x]=null; nb[cy][cx]=null; nb[ny][nx]=Piece(color,true);
-            searchCap(nx,ny,nb,[...caps,{x:met.x,y:met.y}], [...path,{x:nx,y:ny}], true);
-            found=true; nx+=dx; ny+=dy; continue;
+            nb[my][mx]=null; nb[cy][cx]=null; nb[ly][lx]=Piece(color,false);
+            let became = becameKing || (color===LIGHT? ly===0 : ly===SIZE-1);
+            if(became) nb[ly][lx].k=true;
+            searchCap(lx,ly,nb,[...caps,{x:mx,y:my}],[...path,{x:lx,y:ly}],became);
+            found=true;
           }
-          break;
+        }
+      }else{
+        for(const [dx,dy] of DIRS){
+          let nx=cx+dx, ny=cy+dy; let met=null;
+          while(inside(nx,ny)){
+            if(!met && board[ny][nx]==null){ nx+=dx; ny+=dy; continue; }
+            if(!met && board[ny][nx] && board[ny][nx].c===enemy){ met={x:nx,y:ny}; nx+=dx; ny+=dy; continue; }
+            if(met && board[ny] && board[ny][nx]==null){
+              const nb=cloneBoard(board);
+              nb[met.y][met.x]=null; nb[cy][cx]=null; nb[ny][nx]=Piece(color,true);
+              searchCap(nx,ny,nb,[...caps,{x:met.x,y:met.y}],[...path,{x:nx,y:ny}],true);
+              found=true; nx+=dx; ny+=dy; continue;
+            }
+            break;
+          }
         }
       }
+      if(!found && caps.length){ push(path,caps); }
     }
-    if(!found && caps.length){ push(path,caps); }
+    searchCap(x,y,b,[],[],false);
+    if(res.some(m=>m.captures.length)) return res.filter(m=>m.captures.length>0);
+    return res;
   }
-  searchCap(x,y,b,[],[],false);
-  if(res.some(m=>m.captures.length)) return res.filter(m=>m.captures.length>0);
-  return res;
-}
 
-function allMoves(b, turn, mustCap){
-  const ms=[];
-  for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-    const p=b[y][x]; if(p && p.c===turn){ const list=movesFor(b,x,y,mustCap); for(const m of list) ms.push({...m, from:{x,y}}); }
-  }
-  if(mustCap){
-    const max = ms.reduce((a,m)=>Math.max(a,m.captures.length),0);
-    if(max>0) return ms.filter(m=>m.captures.length===max);
-    return allMoves(b, turn, false);
-  }
-  return ms;
-}
-
-/* =============== Применение хода (ЕДИНАЯ ТОЧКА) =============== */
-function playMove(state, move, {silent=false}={}){
-  if(!move) return state;
-  const b=cloneBoard(state.board);
-  const {from,to,captures}=move;
-  const src=b[from.y][from.x];
-  if(!src) return state;
-  b[from.y][from.x]=null;
-  const isPromotion = (!src.k && ((src.c===LIGHT && to.y===0) || (src.c===DARK && to.y===SIZE-1)));
-  b[to.y][to.x]=Piece(src.c, src.k || isPromotion);
-  for(const c of captures) b[c.y][c.x]=null;
-  const next = {
-    ...state,
-    board:b,
-    history:[...state.history, {move, board:state.board}],
-  };
-  if(!silent){
-    if(window.AudioAPI && UI.sfxOn.checked) window.AudioAPI.playMove();
-  }
-  const must = state.mustCapture && captures.length>0;
-  if(must){
-    const cont = movesFor(b, to.x,to.y, true).filter(m=>m.captures.length>0);
-    if(cont.length){
-      next.turn = state.turn;
-      State.selectable = [[to.x,to.y]];
-      State.dragging=null; State.movesCache=cont;
-      State.status = "Продолжайте серию";
-      return next;
+  function allMoves(b, turn, mustCap){
+    const ms=[];
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const p=b[y][x]; if(p && p.c===turn){ const list=movesFor(b,x,y,mustCap); for(const m of list) ms.push({...m, from:{x,y}}); }
     }
-  }
-  next.turn = 1 - state.turn;
-  State.selectable=[]; State.movesCache=null;
-  const oppMoves = allMoves(b, next.turn, state.mustCapture);
-  if(oppMoves.length===0){
-    next.gameOver = true;
-    State.status = (next.turn===LIGHT? "Белые":"Чёрные")+" без ходов. Победа!";
-    if(window.AudioAPI){
-      const result = (State.humanColor === next.turn)? 'lose':'win';
-      window.AudioAPI.showEndModal({result, onNew:newGameFromMenu, onSettings:showSettings});
+    if(mustCap){
+      const max = ms.reduce((a,m)=>Math.max(a,m.captures.length),0);
+      if(max>0) return ms.filter(m=>m.captures.length===max);
+      return allMoves(b, turn, false);
     }
-  }else{
-    State.status = "Идёт игра";
+    return ms;
   }
-  return next;
-}
 
-/* =============== ИИ (минимакс) =============== */
-function evaluate(b, me){
-  let score=0;
-  for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
-    const p=b[y][x]; if(!p) continue;
-    const w = (p.k? 3:1) + (p.c===LIGHT? (7-y)*.04 : y*.04);
-    score += p.c===me ? w : -w;
-  }
-  return score;
-}
-function minimax(b, turn, depth, mustCap, me, alpha=-1e9, beta=1e9){
-  if(depth===0){ return {score:evaluate(b, me)}; }
-  const moves = allMoves(b, turn, mustCap);
-  if(!moves.length) return {score: turn===me? -9999: 9999};
-  let best=null;
-  for(const m of moves){
-    const s={board:b,history:[],turn, mustCapture:mustCap};
-    const n = playMove(s, m, {silent:true});
-    const r = minimax(n.board, n.turn, depth-1, mustCap, me, alpha, beta);
-    const sc=r.score;
-    if(turn===me){
-      if(!best || sc>best.score){ best={score:sc, move:m}; alpha=Math.max(alpha,sc); }
-      if(beta<=alpha) break;
+  /* =============== Применение хода (ЕДИНАЯ ТОЧКА) =============== */
+  function playMove(state, move, {silent=false}={}){
+    if(!move) return state;
+    const b=cloneBoard(state.board);
+    const {from,to,captures}=move;
+    const src=b[from.y][from.x];
+    if(!src) return state;
+    b[from.y][from.x]=null;
+    const isPromotion = (!src.k && ((src.c===LIGHT && to.y===0) || (src.c===DARK && to.y===SIZE-1)));
+    b[to.y][to.x]=Piece(src.c, src.k || isPromotion);
+    for(const c of captures) b[c.y][c.x]=null;
+    const next = {
+      ...state,
+      board:b,
+      history:[...state.history, {move, board:state.board}],
+    };
+    if(!silent){
+      if(window.AudioAPI && UI.sfxOn.checked) window.AudioAPI.playMove();
+    }
+    const must = state.mustCapture && captures.length>0;
+    if(must){
+      const cont = movesFor(b, to.x,to.y, true).filter(m=>m.captures.length>0);
+      if(cont.length){
+        next.turn = state.turn;
+        State.selectable = [[to.x,to.y]];
+        State.dragging=null; State.movesCache=cont;
+        State.status = "Продолжайте серию";
+        return next;
+      }
+    }
+    next.turn = 1 - state.turn;
+    State.selectable=[]; State.movesCache=null;
+    const oppMoves = allMoves(b, next.turn, state.mustCapture);
+    if(oppMoves.length===0){
+      next.gameOver = true;
+      State.status = (next.turn===LIGHT? "Белые":"Чёрные")+" без ходов. Победа!";
+      if(window.AudioAPI){
+        const result = (State.humanColor === next.turn)? 'lose':'win';
+        window.AudioAPI.showEndModal({result, onNew:newGameFromMenu, onSettings:showSettings});
+      }
     }else{
-      if(!best || sc<best.score){ best={score:sc, move:m}; beta=Math.min(beta,sc); }
-      if(beta<=alpha) break;
+      State.status = "Идёт игра";
     }
+    return next;
   }
-  return best;
-}
 
-/* =============== Взаимодействие (тап/drag) =============== */
-const boardEl = UI.board;
-function boardXY(evt){
-  const r=boardEl.getBoundingClientRect();
-  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-  const x = Math.floor((clientX - r.left) / r.width * SIZE);
-  const y = Math.floor((clientY - r.top) / r.height * SIZE);
-  return [Math.max(0,Math.min(SIZE-1,x)), Math.max(0,Math.min(SIZE-1,y))];
-}
-function onPointerDown(e){
-  if(State.lock||State.gameOver) return;
-  const [x,y]=boardXY(e);
-  const p=State.board[y][x]; if(!p) return;
-  if(p.c!==State.turn) return;
-  let moves;
-  if(State.movesCache){
-    moves = State.movesCache.filter(m=>m.from.x===x && m.from.y===y);
-  }else{
-    moves=allMoves(State.board, State.turn, State.mustCapture).filter(m=>m.from.x===x&&m.from.y===y);
-    if(moves.some(m=>m.captures.length>0)){
-      const max = moves.reduce((a,m)=>Math.max(a,m.captures.length),0);
-      moves = moves.filter(m=>m.captures.length===max);
+  /* =============== ИИ (минимакс) =============== */
+  function evaluate(b, me){
+    let score=0;
+    for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){
+      const p=b[y][x]; if(!p) continue;
+      const w = (p.k? 3:1) + (p.c===LIGHT? (7-y)*.04 : y*.04);
+      score += p.c===me ? w : -w;
     }
+    return score;
   }
-  if(!moves.length) return;
-  if(State.movesCache && (x!==State.selectable[0][0] || y!==State.selectable[0][1])) return;
-  State.dragging={x,y, piece:p, fx:x, fy:y, targets:moves.map(m=>m.to), moves};
-  State.hover=[x,y];
-  State.selectable=[[x,y]];
-  draw();
-}
-function onPointerMove(e){
-  if(State.dragging){
+  function minimax(b, turn, depth, mustCap, me, alpha=-1e9, beta=1e9){
+    if(depth===0){ return {score:evaluate(b, me)}; }
+    const moves = allMoves(b, turn, mustCap);
+    if(!moves.length) return {score: turn===me? -9999: 9999};
+    let best=null;
+    for(const m of moves){
+      const s={board:b,history:[],turn, mustCapture:mustCap};
+      const n = playMove(s, m, {silent:true});
+      const r = minimax(n.board, n.turn, depth-1, mustCap, me, alpha, beta);
+      const sc=r.score;
+      if(turn===me){
+        if(!best || sc>best.score){ best={score:sc, move:m}; alpha=Math.max(alpha,sc); }
+        if(beta<=alpha) break;
+      }else{
+        if(!best || sc<best.score){ best={score:sc, move:m}; beta=Math.min(beta,sc); }
+        if(beta<=alpha) break;
+      }
+    }
+    return best;
+  }
+
+  /* =============== Взаимодействие (тап/drag) =============== */
+  const boardEl = UI.board;
+  function boardXY(evt){
+    const r=boardEl.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    const x = Math.floor((clientX - r.left) / r.width * SIZE);
+    const y = Math.floor((clientY - r.top) / r.height * SIZE);
+    return [Math.max(0,Math.min(SIZE-1,x)), Math.max(0,Math.min(SIZE-1,y))];
+  }
+  function onPointerDown(e){
+    if(State.lock||State.gameOver) return;
     const [x,y]=boardXY(e);
-    State.dragging.fx=x; State.dragging.fy=y;
+    const p=State.board[y][x]; if(!p) return;
+    if(p.c!==State.turn) return;
+    let moves;
+    if(State.movesCache){
+      moves = State.movesCache.filter(m=>m.from.x===x && m.from.y===y);
+    }else{
+      moves=allMoves(State.board, State.turn, State.mustCapture).filter(m=>m.from.x===x&&m.from.y===y);
+      if(moves.some(m=>m.captures.length>0)){
+        const max = moves.reduce((a,m)=>Math.max(a,m.captures.length),0);
+        moves = moves.filter(m=>m.captures.length===max);
+      }
+    }
+    if(!moves.length) return;
+    if(State.movesCache && (x!==State.selectable[0][0] || y!==State.selectable[0][1])) return;
+    State.dragging={x,y, piece:p, fx:x, fy:y, targets:moves.map(m=>m.to), moves};
+    State.hover=[x,y];
+    State.selectable=[[x,y]];
     draw();
-  }else{
-    const [x,y]=boardXY(e); State.hover=[x,y]; draw();
   }
-}
-function onPointerUp(e){
-  if(!State.dragging) return;
-  const [x,y]=boardXY(e);
-  const cand = State.dragging.moves.find(m=>m.to.x===x && m.to.y===y);
-  if(cand){
-    Object.assign(State, playMove(State, cand));
-    syncUI();
-    if(State.mode==="ai" && State.turn!==State.humanColor && !State.gameOver){
-      thinkAI();
+  function onPointerMove(e){
+    if(State.dragging){
+      const [x,y]=boardXY(e);
+      State.dragging.fx=x; State.dragging.fy=y;
+      draw();
+    }else{
+      const [x,y]=boardXY(e); State.hover=[x,y]; draw();
     }
   }
-  State.dragging=null; State.hover=null; draw();
-}
-['pointerdown','mousedown','touchstart'].forEach(t=>boardEl.addEventListener(t,onPointerDown,{passive:false}));
-['pointermove','mousemove','touchmove'].forEach(t=>boardEl.addEventListener(t,onPointerMove,{passive:false}));
-['pointerup','mouseup','touchend','touchcancel'].forEach(t=>boardEl.addEventListener(t,onPointerUp,{passive:false}));
+  function onPointerUp(e){
+    if(!State.dragging) return;
+    const [x,y]=boardXY(e);
+    const cand = State.dragging.moves.find(m=>m.to.x===x && m.to.y===y);
+    if(cand){
+      Object.assign(State, playMove(State, cand));
+      syncUI();
+      if(State.mode==="ai" && State.turn!==State.humanColor && !State.gameOver){
+        thinkAI();
+      }
+    }
+    State.dragging=null; State.hover=null; draw();
+  }
+  ['pointerdown','mousedown','touchstart'].forEach(t=>boardEl.addEventListener(t,onPointerDown,{passive:false}));
+  ['pointermove','mousemove','touchmove'].forEach(t=>boardEl.addEventListener(t,onPointerMove,{passive:false}));
+  ['pointerup','mouseup','touchend','touchcancel'].forEach(t=>boardEl.addEventListener(t,onPointerUp,{passive:false}));
 
-/* =============== Игра/ИИ/Кнопки =============== */
-function syncUI(){
-  UI.turn.textContent = (State.turn===LIGHT? "Белые":"Чёрные");
-  UI.status.textContent = State.status || "Идёт игра";
-  draw();
-}
-async function thinkAI(){
-  State.lock=true; UI.status.textContent="ИИ думает…"; draw();
-  await new Promise(r=>setTimeout(r, 120));
-  const depth = State.aiDepth+1;
-  const best = minimax(State.board, State.turn, depth, State.mustCapture, State.turn);
-  Object.assign(State, playMove(State, best.move));
-  State.lock=false; syncUI();
-}
-function newGameFromMenu(){
-  State.board=startBoard(); State.turn=LIGHT; State.history=[]; State.gameOver=false; State.status="Идёт игра";
-  State.mustCapture = UI.mustCap.checked;
-  State.mode = UI.mode.value;
-  State.humanColor = UI.yourColor.value==="white"? LIGHT: DARK;
-  State.aiDepth = parseInt(UI.level.value,10);
-  State.selectable=[]; State.movesCache=null; State.dragging=null; State.hover=null;
-  if(State.mode==="ai" && State.humanColor!==State.turn){ setTimeout(thinkAI, 200); }
-  showGame();
-  syncUI();
-}
-function showGame(){
-  UI.game.hidden=false;
-  UI.settings.hidden=true;
-  UI.settingsBtn.classList.remove('hidden');
-  if(window.sizeBoard) sizeBoard();
-}
-function showSettings(){
-  UI.game.hidden=true;
-  UI.settings.hidden=false;
-  UI.settingsBtn.classList.add('hidden');
-  if(window.sizeBoard) sizeBoard();
-}
-UI.undo.addEventListener('click', ()=>{
-  if(!State.history.length) return;
-  const last=State.history.pop();
-  State.board=last.board; State.turn=1-State.turn; State.gameOver=false; State.status="Ход отменён";
-  State.selectable=[]; State.movesCache=null;
-  draw(); syncUI();
-});
-UI.hint.addEventListener('click', ()=>{
-  const moves=allMoves(State.board, State.turn, State.mustCapture);
-  if(!moves.length) return;
-  const best=minimax(State.board, State.turn, (State.aiDepth+1), State.mustCapture, State.turn);
-  State.selectable=[[best.move.from.x,best.move.from.y]];
-  State.dragging={x:best.move.from.x,y:best.move.from.y, fx:best.move.to.x, fy:best.move.to.y, piece:State.board[best.move.from.y][best.move.from.x], targets:[best.move.to], moves:[best.move]};
-  State.status="Подсказка: выделен лучший ход";
-  draw();
-});
-UI.restart.addEventListener('click', showSettings);
-UI.start.addEventListener('click', newGameFromMenu);
-UI.settingsBtn.addEventListener('click', showSettings);
-(function boot(){ draw(); showSettings(); })();
+  /* =============== Игра/ИИ/Кнопки =============== */
+  function syncUI(){
+    UI.turn.textContent = (State.turn===LIGHT? "Белые":"Чёрные");
+    UI.status.textContent = State.status || "Идёт игра";
+    draw();
+  }
+  async function thinkAI(){
+    State.lock=true; UI.status.textContent="ИИ думает…"; draw();
+    await new Promise(r=>setTimeout(r, 120));
+    const depth = State.aiDepth+1;
+    const best = minimax(State.board, State.turn, depth, State.mustCapture, State.turn);
+    Object.assign(State, playMove(State, best.move));
+    State.lock=false; syncUI();
+  }
+  function newGameFromMenu(){
+    State.board=startBoard(); State.turn=LIGHT; State.history=[]; State.gameOver=false; State.status="Идёт игра";
+    State.mustCapture = UI.mustCap.checked;
+    State.mode = UI.mode.value;
+    State.humanColor = UI.yourColor.value==="white"? LIGHT: DARK;
+    State.aiDepth = parseInt(UI.level.value,10);
+    State.selectable=[]; State.movesCache=null; State.dragging=null; State.hover=null;
+    if(State.mode==="ai" && State.humanColor!==State.turn){ setTimeout(thinkAI, 200); }
+    showGame();
+    syncUI();
+  }
 
+  UI.undo.addEventListener('click', ()=>{
+    if(!State.history.length) return;
+    const last=State.history.pop();
+    State.board=last.board; State.turn=1-State.turn; State.gameOver=false; State.status="Ход отменён";
+    State.selectable=[]; State.movesCache=null;
+    draw(); syncUI();
+  });
+  UI.hint.addEventListener('click', ()=>{
+    const moves=allMoves(State.board, State.turn, State.mustCapture);
+    if(!moves.length) return;
+    const best=minimax(State.board, State.turn, (State.aiDepth+1), State.mustCapture, State.turn);
+    State.selectable=[[best.move.from.x,best.move.from.y]];
+    State.dragging={x:best.move.from.x,y:best.move.from.y, fx:best.move.to.x, fy:best.move.to.y, piece:State.board[best.move.from.y][best.move.from.x], targets:[best.move.to], moves:[best.move]};
+    State.status="Подсказка: выделен лучший ход";
+    draw();
+  });
+  UI.restart.addEventListener('click', showSettings);
+  UI.start.addEventListener('click', newGameFromMenu);
+
+  (function boot(){ draw(); showSettings(); })();
 </script>
 <script src="./src/board-layout.js"></script>
 </body>
